@@ -1,0 +1,1 @@
+ALTER TABLE public.ingredients ADD COLUMN category TEXT NOT NULL DEFAULT 'Outros';

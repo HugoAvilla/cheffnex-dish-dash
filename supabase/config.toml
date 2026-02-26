@@ -1,0 +1,7 @@
+project_id = "jxfckfwbxjjoekolispz"
+
+[functions.create-waiter]
+verify_jwt = false
+
+[functions.delete-waiter]
+verify_jwt = false
