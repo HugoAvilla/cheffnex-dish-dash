@@ -3,7 +3,7 @@ import { AdminLayout } from "@/components/admin/AdminLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
-import { Package, AlertTriangle, XCircle, Clock, ShoppingBag, ClipboardList } from "lucide-react";
+import { Package, AlertTriangle, XCircle, Clock, ShoppingBag, ClipboardList, DollarSign } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { addDays, isAfter, isBefore } from "date-fns";
@@ -15,6 +15,7 @@ type Ingredient = {
   current_stock: number;
   min_stock: number;
   category: string;
+  unit_value: number | null;
   expiration_date: string | null;
 };
 
@@ -37,6 +38,28 @@ const Dashboard = () => {
       return data;
     },
   });
+
+  // Fetch restaurant settings
+  const { data: settings } = useQuery({
+    queryKey: ["restaurant-settings", restaurantId],
+    queryFn: async () => {
+      if (!restaurantId) return { expiry_alert_days: 1, low_stock_threshold: 10 };
+      const { data, error } = await supabase
+        .from("restaurants")
+        .select("expiry_alert_days, low_stock_threshold")
+        .eq("id", restaurantId)
+        .single();
+      if (error) return { expiry_alert_days: 1, low_stock_threshold: 10 };
+      return {
+        expiry_alert_days: (data as any).expiry_alert_days ?? 1,
+        low_stock_threshold: (data as any).low_stock_threshold ?? 10,
+      };
+    },
+    enabled: !!restaurantId,
+  });
+
+  const alertDays = settings?.expiry_alert_days ?? 1;
+  const thresholdPercent = settings?.low_stock_threshold ?? 10;
 
   const { data: ingredients = [] } = useQuery({
     queryKey: ["ingredients-dashboard", restaurantId],
@@ -86,26 +109,32 @@ const Dashboard = () => {
   });
 
   const now = new Date();
-  const in7days = addDays(now, 7);
+  const alertDate = addDays(now, alertDays);
 
   const metrics = useMemo(() => ({
     total: ingredients.length,
     outOfStock: ingredients.filter(i => i.current_stock === 0).length,
-    lowStock: ingredients.filter(i => i.current_stock > 0 && i.current_stock <= i.min_stock * 1.1).length,
+    lowStock: ingredients.filter(i => i.current_stock > 0 && i.current_stock <= i.min_stock * (1 + thresholdPercent / 100)).length,
     nearExpiry: ingredients.filter(i => {
       if (!i.expiration_date) return false;
       const exp = new Date(i.expiration_date);
-      return isAfter(exp, now) && isBefore(exp, in7days);
+      return isAfter(exp, now) && isBefore(exp, alertDate);
     }).length,
-  }), [ingredients, now, in7days]);
+    stockValue: ingredients.reduce((sum, i) => {
+      if (i.unit_value != null && i.unit_value > 0) {
+        return sum + (Number(i.unit_value) * Number(i.current_stock));
+      }
+      return sum;
+    }, 0),
+  }), [ingredients, now, alertDate, thresholdPercent]);
 
   const outOfStockItems = useMemo(() => ingredients.filter(i => i.current_stock === 0), [ingredients]);
-  const lowStockItems = useMemo(() => ingredients.filter(i => i.current_stock > 0 && i.current_stock <= i.min_stock * 1.1), [ingredients]);
+  const lowStockItems = useMemo(() => ingredients.filter(i => i.current_stock > 0 && i.current_stock <= i.min_stock * (1 + thresholdPercent / 100)), [ingredients, thresholdPercent]);
   const nearExpiryItems = useMemo(() => ingredients.filter(i => {
     if (!i.expiration_date) return false;
     const exp = new Date(i.expiration_date);
-    return isAfter(exp, now) && isBefore(exp, in7days);
-  }), [ingredients, now, in7days]);
+    return isAfter(exp, now) && isBefore(exp, alertDate);
+  }), [ingredients, now, alertDate]);
 
   const categoryStats = useMemo(() => {
     const map: Record<string, { total: number; outOfStock: number }> = {};
@@ -125,12 +154,13 @@ const Dashboard = () => {
   const userName = profile?.full_name || "Admin";
 
   const kpiCards = [
-    { label: "Total de Itens", value: metrics.total, icon: Package, bgClass: "bg-primary/10", iconClass: "text-primary", valueClass: "text-foreground" },
-    { label: "Produtos Ativos", value: activeProductsCount, icon: ShoppingBag, bgClass: "bg-accent/10", iconClass: "text-accent", valueClass: "text-foreground" },
-    { label: "Pedidos Hoje", value: todayOrdersCount, icon: ClipboardList, bgClass: "bg-primary/10", iconClass: "text-primary", valueClass: "text-foreground" },
-    { label: "Sem Estoque", value: metrics.outOfStock, icon: XCircle, bgClass: "bg-destructive/10", iconClass: "text-destructive", valueClass: "text-destructive" },
-    { label: "Estoque Baixo", value: metrics.lowStock, icon: AlertTriangle, bgClass: "bg-[hsl(var(--warning))]/10", iconClass: "text-[hsl(var(--warning))]", valueClass: "text-[hsl(var(--warning))]" },
-    { label: "Próx. Vencimento", value: metrics.nearExpiry, icon: Clock, bgClass: "bg-[hsl(var(--warning))]/10", iconClass: "text-[hsl(var(--warning))]", valueClass: "text-foreground" },
+    { label: "Total de Itens", value: metrics.total, icon: Package, bgClass: "bg-primary/10", iconClass: "text-primary", valueClass: "text-foreground", isMonetary: false },
+    { label: "Produtos Ativos", value: activeProductsCount, icon: ShoppingBag, bgClass: "bg-accent/10", iconClass: "text-accent", valueClass: "text-foreground", isMonetary: false },
+    { label: "Pedidos Hoje", value: todayOrdersCount, icon: ClipboardList, bgClass: "bg-primary/10", iconClass: "text-primary", valueClass: "text-foreground", isMonetary: false },
+    { label: "Valor em Estoque", value: metrics.stockValue, icon: DollarSign, bgClass: "bg-[hsl(var(--success))]/10", iconClass: "text-[hsl(var(--success))]", valueClass: "text-[hsl(var(--success))]", isMonetary: true },
+    { label: "Sem Estoque", value: metrics.outOfStock, icon: XCircle, bgClass: "bg-destructive/10", iconClass: "text-destructive", valueClass: "text-destructive", isMonetary: false },
+    { label: "Estoque Baixo", value: metrics.lowStock, icon: AlertTriangle, bgClass: "bg-[hsl(var(--warning))]/10", iconClass: "text-[hsl(var(--warning))]", valueClass: "text-[hsl(var(--warning))]", isMonetary: false },
+    { label: "Próx. Vencimento", value: metrics.nearExpiry, icon: Clock, bgClass: "bg-[hsl(var(--warning))]/10", iconClass: "text-[hsl(var(--warning))]", valueClass: "text-foreground", isMonetary: false },
   ];
 
   return (
@@ -143,7 +173,7 @@ const Dashboard = () => {
         </div>
 
         {/* KPI Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-3">
           {kpiCards.map((kpi) => (
             <Card key={kpi.label}>
               <CardContent className="p-4 flex items-center gap-3">
@@ -151,7 +181,11 @@ const Dashboard = () => {
                   <kpi.icon className={`h-5 w-5 ${kpi.iconClass}`} />
                 </div>
                 <div>
-                  <p className={`text-2xl font-bold ${kpi.valueClass}`}>{kpi.value}</p>
+                  <p className={`text-xl font-bold ${kpi.valueClass}`}>
+                    {kpi.isMonetary
+                      ? `R$ ${Number(kpi.value).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                      : kpi.value}
+                  </p>
                   <p className="text-xs text-muted-foreground">{kpi.label}</p>
                 </div>
               </CardContent>

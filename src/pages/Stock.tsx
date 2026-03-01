@@ -26,6 +26,7 @@ type Ingredient = {
   current_stock: number;
   min_stock: number;
   cost_price: number;
+  unit_value: number | null;
   expiration_date: string | null;
   restaurant_id: string;
   created_at: string;
@@ -39,14 +40,15 @@ type NewItemForm = {
   min_stock: number;
   current_stock: number;
   cost_price: number;
+  unit_value: string;
   expiration_date: string;
 };
 
-const emptyForm: NewItemForm = { name: "", category: "Outros", unit: "UN", min_stock: 0, current_stock: 0, cost_price: 0, expiration_date: "" };
+const emptyForm: NewItemForm = { name: "", category: "Outros", unit: "UN", min_stock: 0, current_stock: 0, cost_price: 0, unit_value: "", expiration_date: "" };
 
-function getStatus(item: Ingredient): "out" | "low" | "normal" {
+function getStatus(item: Ingredient, thresholdPercent: number): "out" | "low" | "normal" {
   if (item.current_stock === 0) return "out";
-  if (item.current_stock > 0 && item.current_stock <= item.min_stock * 1.1) return "low";
+  if (item.current_stock > 0 && item.current_stock <= item.min_stock * (1 + thresholdPercent / 100)) return "low";
   return "normal";
 }
 
@@ -54,6 +56,20 @@ function StatusBadge({ status }: { status: "out" | "low" | "normal" }) {
   if (status === "out") return <Badge className="bg-destructive text-destructive-foreground">Sem estoque</Badge>;
   if (status === "low") return <Badge className="bg-[hsl(var(--warning))] text-[hsl(var(--warning-foreground))]">Estoque baixo</Badge>;
   return <Badge className="bg-[hsl(var(--success))] text-[hsl(var(--success-foreground))]">Normal</Badge>;
+}
+
+function getRowBg(status: "out" | "low" | "normal"): string {
+  if (status === "out") return "bg-red-50 dark:bg-red-950/30";
+  if (status === "low") return "bg-yellow-50 dark:bg-yellow-950/30";
+  return "bg-green-50/50 dark:bg-green-950/20";
+}
+
+function isNearExpiry(expirationDate: string | null, alertDays: number): boolean {
+  if (!expirationDate) return false;
+  const now = new Date();
+  const exp = new Date(expirationDate);
+  const alertDate = addDays(now, alertDays);
+  return isAfter(exp, now) && isBefore(exp, alertDate);
 }
 
 const Stock = () => {
@@ -65,6 +81,28 @@ const Stock = () => {
   const [form, setForm] = useState<NewItemForm>(emptyForm);
   const [renamingCategory, setRenamingCategory] = useState<string | null>(null);
   const [newCategoryName, setNewCategoryName] = useState("");
+
+  // Fetch restaurant settings
+  const { data: settings } = useQuery({
+    queryKey: ["restaurant-settings", restaurantId],
+    queryFn: async () => {
+      if (!restaurantId) return { expiry_alert_days: 1, low_stock_threshold: 10 };
+      const { data, error } = await supabase
+        .from("restaurants")
+        .select("expiry_alert_days, low_stock_threshold")
+        .eq("id", restaurantId)
+        .single();
+      if (error) return { expiry_alert_days: 1, low_stock_threshold: 10 };
+      return {
+        expiry_alert_days: (data as any).expiry_alert_days ?? 1,
+        low_stock_threshold: (data as any).low_stock_threshold ?? 10,
+      };
+    },
+    enabled: !!restaurantId,
+  });
+
+  const alertDays = settings?.expiry_alert_days ?? 1;
+  const thresholdPercent = settings?.low_stock_threshold ?? 10;
 
   const { data: items = [], isLoading } = useQuery({
     queryKey: ["ingredients", restaurantId],
@@ -84,18 +122,18 @@ const Stock = () => {
   // Metrics
   const metrics = useMemo(() => {
     const now = new Date();
-    const in7days = addDays(now, 7);
+    const alertDate = addDays(now, alertDays);
     return {
       total: items.length,
       outOfStock: items.filter(i => i.current_stock === 0).length,
-      lowStock: items.filter(i => i.current_stock > 0 && i.current_stock <= i.min_stock * 1.1).length,
+      lowStock: items.filter(i => i.current_stock > 0 && i.current_stock <= i.min_stock * (1 + thresholdPercent / 100)).length,
       nearExpiry: items.filter(i => {
         if (!i.expiration_date) return false;
         const exp = new Date(i.expiration_date);
-        return isAfter(exp, now) && isBefore(exp, in7days);
+        return isAfter(exp, now) && isBefore(exp, alertDate);
       }).length,
     };
-  }, [items]);
+  }, [items, alertDays, thresholdPercent]);
 
   // Filtered + grouped
   const filtered = useMemo(() => {
@@ -109,7 +147,6 @@ const Stock = () => {
       if (!groups[cat]) groups[cat] = [];
       groups[cat].push(item);
     }
-    // Sort categories alphabetically, but "Outros" last
     return Object.entries(groups).sort(([a], [b]) => {
       if (a === "Outros") return 1;
       if (b === "Outros") return -1;
@@ -137,6 +174,7 @@ const Stock = () => {
         min_stock: form.min_stock,
         current_stock: form.current_stock,
         cost_price: form.cost_price,
+        unit_value: form.unit_value ? Number(form.unit_value) : null,
         expiration_date: form.expiration_date || null,
       };
       if (editingItem) {
@@ -203,6 +241,7 @@ const Stock = () => {
       min_stock: item.min_stock,
       current_stock: item.current_stock,
       cost_price: item.cost_price,
+      unit_value: item.unit_value != null ? String(item.unit_value) : "",
       expiration_date: item.expiration_date || "",
     });
     setModalOpen(true);
@@ -325,31 +364,37 @@ const Stock = () => {
                           <TableHead className="text-center">Estoque Atual</TableHead>
                           <TableHead className="text-center">Estoque Mín.</TableHead>
                           <TableHead className="text-center">Unidade</TableHead>
+                          <TableHead className="text-center">Valor Un. (R$)</TableHead>
                           <TableHead className="text-center">Status</TableHead>
                           <TableHead>Validade</TableHead>
-                          <TableHead>Responsável</TableHead>
                           <TableHead className="w-[80px]"></TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {categoryItems.map((item) => {
-                          const status = getStatus(item);
+                          const status = getStatus(item, thresholdPercent);
+                          const nearExp = isNearExpiry(item.expiration_date, alertDays);
                           return (
-                            <TableRow key={item.id}>
+                            <TableRow key={item.id} className={getRowBg(status)}>
                               <TableCell className="font-medium">{item.name}</TableCell>
                               <TableCell className="text-center font-mono">{Number(item.current_stock)}</TableCell>
                               <TableCell className="text-center font-mono">{Number(item.min_stock)}</TableCell>
                               <TableCell className="text-center text-muted-foreground">{item.unit}</TableCell>
+                              <TableCell className="text-center font-mono">
+                                {item.unit_value != null ? `R$ ${Number(item.unit_value).toFixed(2)}` : <span className="text-muted-foreground text-xs">—</span>}
+                              </TableCell>
                               <TableCell className="text-center">
                                 <StatusBadge status={status} />
                               </TableCell>
                               <TableCell>
-                                {item.expiration_date
-                                  ? format(new Date(item.expiration_date), "dd/MM/yyyy", { locale: ptBR })
-                                  : <span className="text-muted-foreground text-xs">Não preenchido</span>
-                                }
+                                {item.expiration_date ? (
+                                  <span className={nearExp ? "bg-yellow-200 dark:bg-yellow-800 text-yellow-900 dark:text-yellow-100 px-2 py-0.5 rounded text-sm font-medium" : ""}>
+                                    {format(new Date(item.expiration_date), "dd/MM/yyyy", { locale: ptBR })}
+                                  </span>
+                                ) : (
+                                  <span className="text-muted-foreground text-xs">Não preenchido</span>
+                                )}
                               </TableCell>
-                              <TableCell className="text-muted-foreground text-sm">Admin Principal</TableCell>
                               <TableCell>
                                 <div className="flex items-center gap-1">
                                   <Button variant="ghost" size="icon" onClick={() => openEdit(item)}>
@@ -491,6 +536,18 @@ const Stock = () => {
                   <Label>Estoque Atual</Label>
                   <Input type="number" value={form.current_stock} onChange={(e) => setForm({ ...form, current_stock: Number(e.target.value) })} />
                 </div>
+              </div>
+              <div className="grid gap-2">
+                <Label>Valor Unidade - R$ (opcional)</Label>
+                <p className="text-xs text-muted-foreground">Valor monetário por unidade para cálculo do valor total em estoque.</p>
+                <Input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={form.unit_value}
+                  onChange={(e) => setForm({ ...form, unit_value: e.target.value })}
+                  placeholder="Ex: 12.50"
+                />
               </div>
               <div className="grid gap-2">
                 <Label>Data de Vencimento (opcional)</Label>

@@ -1,6 +1,6 @@
 import { ReactNode } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
-import { LayoutDashboard, Package, ShoppingBag, ClipboardList, LogOut, List, Eye, Store, Paintbrush, BarChart2, DollarSign } from "lucide-react";
+import { LayoutDashboard, Package, ShoppingBag, ClipboardList, LogOut, List, Eye, Store, Paintbrush, BarChart2, DollarSign, Settings } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import logoIcon from "@/assets/logo-icon.png";
 
@@ -14,6 +14,7 @@ const getNavItems = (restaurantId: string | null) => [
   { to: "/admin/storefront", icon: Paintbrush, label: "Personalizar" },
   { to: "/admin/relatorios", icon: BarChart2, label: "Relatórios" },
   { to: "/admin/financeiro", icon: DollarSign, label: "Financeiro" },
+  { to: "/admin/settings", icon: Settings, label: "Configurações" },
   { to: restaurantId ? `/menu/${restaurantId}` : "/", icon: Eye, label: "Ver Cardápio" },
 ];
 
@@ -43,11 +44,10 @@ export const AdminLayout = ({ children }: { children: ReactNode }) => {
               <NavLink
                 key={item.to}
                 to={item.to}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                  active
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${active
                     ? "bg-sidebar-accent text-sidebar-accent-foreground"
                     : "text-sidebar-foreground hover:bg-sidebar-accent/50"
-                }`}
+                  }`}
               >
                 <item.icon className="h-5 w-5" />
                 {item.label}
