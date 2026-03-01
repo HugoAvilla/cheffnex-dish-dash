@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import loginHero from "@/assets/login-hero.jpg";
@@ -65,6 +65,11 @@ const AdminLogin = () => {
                 placeholder="••••••••"
                 className="w-full px-4 py-3 rounded-xl bg-card border border-border text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary outline-none"
               />
+            </div>
+            <div className="flex justify-end">
+              <Link to="/admin/forgot-password" className="text-sm text-primary hover:underline">
+                Esqueci minha senha
+              </Link>
             </div>
             <button
               type="submit"

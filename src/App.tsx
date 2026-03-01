@@ -25,6 +25,8 @@ import AdminStorefront from "./pages/AdminStorefront";
 import Relatorios from "./pages/Relatorios";
 import Financeiro from "./pages/Financeiro";
 import NotFound from "./pages/NotFound";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -57,6 +59,8 @@ const App = () => (
                   <Route path="/menu/:restaurantId" element={<Menu />} />
                   <Route path="/cart" element={<Cart />} />
                   <Route path="/admin/login" element={<AdminLogin />} />
+                  <Route path="/admin/forgot-password" element={<ForgotPassword />} />
+                  <Route path="/admin/reset-password" element={<ResetPassword />} />
                   <Route path="/admin" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
                   <Route path="/admin/stock" element={<ProtectedRoute><Stock /></ProtectedRoute>} />
                   <Route path="/admin/products" element={<ProtectedRoute><AdminProducts /></ProtectedRoute>} />
