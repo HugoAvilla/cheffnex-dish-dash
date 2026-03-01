@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { CartProvider } from "@/contexts/CartContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { AuthProvider } from "@/contexts/AuthContext";
@@ -52,7 +52,8 @@ const App = () => (
               <ErrorToast />
               <BrowserRouter>
                 <Routes>
-                  <Route path="/" element={<Menu />} />
+                  <Route path="/" element={<Navigate to="/admin/login" replace />} />
+                  <Route path="/menu" element={<Menu />} />
                   <Route path="/menu/:restaurantId" element={<Menu />} />
                   <Route path="/cart" element={<Cart />} />
                   <Route path="/admin/login" element={<AdminLogin />} />
