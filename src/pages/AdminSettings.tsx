@@ -7,14 +7,88 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Settings, Save } from "lucide-react";
+import { Settings, Save, Ticket, Plus, Trash2 } from "lucide-react";
+import { HelpTutorialModal } from "@/components/admin/HelpTutorialModal";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from "@/components/ui/table";
+import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const AdminSettings = () => {
-    const { restaurantId } = useAuth();
+    const queryClient = useQueryClient();
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [expiryAlertDays, setExpiryAlertDays] = useState(1);
     const [lowStockThreshold, setLowStockThreshold] = useState(10);
+
+    // New Coupon State
+    const [newCouponCode, setNewCouponCode] = useState("");
+    const [newCouponType, setNewCouponType] = useState("percentage");
+    const [newCouponValue, setNewCouponValue] = useState("");
+
+    const { data: coupons = [], isLoading: loadingCoupons } = useQuery({
+        queryKey: ["coupons", restaurantId],
+        queryFn: async () => {
+            if (!restaurantId) return [];
+            const { data, error } = await supabase
+                .from("coupons")
+                .select("*")
+                .eq("restaurant_id", restaurantId)
+                .order("created_at", { ascending: false });
+            if (error) throw error;
+            return data;
+        },
+        enabled: !!restaurantId,
+    });
+
+    const addCouponMutation = useMutation({
+        mutationFn: async () => {
+            if (!newCouponCode || !newCouponValue) throw new Error("Preencha todos os campos do cupom.");
+            const { error } = await supabase.from("coupons").insert({
+                restaurant_id: restaurantId,
+                code: newCouponCode.toUpperCase(),
+                discount_type: newCouponType,
+                discount_value: parseFloat(newCouponValue),
+            });
+            if (error) throw error;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["coupons"] });
+            setNewCouponCode("");
+            setNewCouponValue("");
+            toast.success("Cupom adicionado com sucesso!");
+        },
+        onError: (error) => toast.error(error.message),
+    });
+
+    const toggleCouponMutation = useMutation({
+        mutationFn: async ({ id, is_active }: { id: string; is_active: boolean }) => {
+            const { error } = await supabase.from("coupons").update({ is_active }).eq("id", id);
+            if (error) throw error;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["coupons"] });
+            toast.success("Status do cupom alterado.");
+        },
+    });
+
+    const deleteCouponMutation = useMutation({
+        mutationFn: async (id: string) => {
+            const { error } = await supabase.from("coupons").delete().eq("id", id);
+            if (error) throw error;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["coupons"] });
+            toast.success("Cupom removido.");
+        },
+    });
 
     useEffect(() => {
         if (!restaurantId) return;
@@ -63,6 +137,15 @@ const AdminSettings = () => {
 
     return (
         <AdminLayout>
+            <HelpTutorialModal
+                tutorialKey="admin_settings"
+                title="Configurações Gerais"
+                steps={[
+                    { title: "Configurações da Loja", description: "Aqui você ajusta o comportamento geral da sua loja." },
+                    { title: "Alertas de Estoque", description: "Configure a régua financeira e os dias para alerta de vencimento de insumos ou quando seu estoque de algo estiver perigosamente baixo." },
+                    { title: "Cupons de Desconto", description: "Você também gerenciará seus cupons de descontos para os clientes nesta área (após criados)." },
+                ]}
+            />
             <div className="p-4 md:p-6 max-w-2xl mx-auto space-y-6">
                 <div className="flex items-center gap-3">
                     <Settings className="h-6 w-6 text-primary" />
@@ -122,6 +205,115 @@ const AdminSettings = () => {
                         {saving ? "Salvando..." : "Salvar Configurações"}
                     </Button>
                 </div>
+
+                {/* Coupons Management Section */}
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="text-base flex items-center gap-2">
+                            <Ticket className="w-5 h-5 text-primary" />
+                            Cupons de Desconto
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                        <div className="flex flex-col sm:flex-row gap-4 items-end">
+                            <div className="grid gap-2 flex-grow">
+                                <Label htmlFor="coupon-code">Código</Label>
+                                <Input
+                                    id="coupon-code"
+                                    placeholder="Ex: BEMVINDO10"
+                                    value={newCouponCode}
+                                    onChange={(e) => setNewCouponCode(e.target.value)}
+                                    className="uppercase"
+                                />
+                            </div>
+                            <div className="grid gap-2 w-full sm:w-32">
+                                <Label>Tipo</Label>
+                                <Select value={newCouponType} onValueChange={setNewCouponType}>
+                                    <SelectTrigger>
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="percentage">Porcentagem (%)</SelectItem>
+                                        <SelectItem value="fixed">Fixo (R$)</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="grid gap-2 w-full sm:w-32">
+                                <Label htmlFor="coupon-value">Valor</Label>
+                                <Input
+                                    id="coupon-value"
+                                    type="number"
+                                    min={0}
+                                    step={0.01}
+                                    placeholder={newCouponType === "percentage" ? "10" : "15.00"}
+                                    value={newCouponValue}
+                                    onChange={(e) => setNewCouponValue(e.target.value)}
+                                />
+                            </div>
+                            <Button
+                                onClick={() => addCouponMutation.mutate()}
+                                disabled={addCouponMutation.isPending || !newCouponCode || !newCouponValue}
+                                className="w-full sm:w-auto"
+                            >
+                                <Plus className="w-4 h-4 mr-2" /> Adicionar
+                            </Button>
+                        </div>
+
+                        {loadingCoupons ? (
+                            <div className="text-center py-4 text-muted-foreground">Carregando cupons...</div>
+                        ) : coupons.length === 0 ? (
+                            <div className="text-center py-8 text-muted-foreground bg-muted/20 rounded-lg border border-dashed">
+                                Nenhum cupom cadastrado.
+                            </div>
+                        ) : (
+                            <div className="rounded-md border">
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead>Código</TableHead>
+                                            <TableHead>Desconto</TableHead>
+                                            <TableHead className="text-center">Ativo</TableHead>
+                                            <TableHead className="text-right">Ação</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {coupons.map((coupon: any) => (
+                                            <TableRow key={coupon.id}>
+                                                <TableCell className="font-medium">{coupon.code}</TableCell>
+                                                <TableCell>
+                                                    {coupon.discount_type === "percentage"
+                                                        ? `${coupon.discount_value}%`
+                                                        : `R$ ${coupon.discount_value.toFixed(2).replace(".", ",")}`
+                                                    }
+                                                </TableCell>
+                                                <TableCell className="text-center">
+                                                    <Switch
+                                                        checked={coupon.is_active}
+                                                        onCheckedChange={(checked) => toggleCouponMutation.mutate({ id: coupon.id, is_active: checked })}
+                                                    />
+                                                </TableCell>
+                                                <TableCell className="text-right">
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        className="text-destructive hover:bg-destructive/10"
+                                                        onClick={() => {
+                                                            if (window.confirm("Deseja realmente remover este cupom?")) {
+                                                                deleteCouponMutation.mutate(coupon.id);
+                                                            }
+                                                        }}
+                                                    >
+                                                        <Trash2 className="w-4 h-4" />
+                                                    </Button>
+                                                </TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                            </div>
+                        )}
+                    </CardContent>
+                </Card>
             </div>
         </AdminLayout>
     );

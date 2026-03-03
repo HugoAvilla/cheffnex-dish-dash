@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { X, ChevronLeft, MessageCircle, MapPin, Store, CreditCard, Banknote, QrCode } from "lucide-react";
+import { X, ChevronLeft, MessageCircle, MapPin, Store, CreditCard, Banknote, QrCode, Ticket } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
 import { supabase } from "@/integrations/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
@@ -26,8 +26,48 @@ export const CheckoutModal = ({ open, onClose, restaurantId, restaurantPhone, pr
   const [phone, setPhone] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
+  const [couponCode, setCouponCode] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; type: string; value: number } | null>(null);
+  const [checkingCoupon, setCheckingCoupon] = useState(false);
+
   const accentColor = primaryColor || "hsl(var(--accent))";
-  const steps = ["Entrega", "Pagamento", "Identificação"];
+  const steps = ["Resumo & Entrega", "Pagamento", "Identificação"];
+
+  const calculatedTotal = appliedCoupon
+    ? appliedCoupon.type === "percentage"
+      ? total * (1 - appliedCoupon.value / 100)
+      : Math.max(0, total - appliedCoupon.value)
+    : total;
+
+  const handleApplyCoupon = async () => {
+    if (!couponCode || !restaurantId) return;
+    setCheckingCoupon(true);
+    try {
+      const { data, error } = await supabase
+        .from("coupons")
+        .select("*")
+        .eq("restaurant_id", restaurantId)
+        .eq("code", couponCode.toUpperCase())
+        .eq("is_active", true)
+        .single();
+
+      if (error || !data) {
+        toast.error("Cupom inválido ou expirado.");
+        setAppliedCoupon(null);
+      } else {
+        toast.success("Cupom aplicado com sucesso!");
+        setAppliedCoupon({
+          code: data.code,
+          type: data.discount_type,
+          value: data.discount_value
+        });
+      }
+    } catch {
+      toast.error("Erro ao validar cupom.");
+    } finally {
+      setCheckingCoupon(false);
+    }
+  };
 
   const canAdvance = () => {
     if (step === 0) return true;
@@ -53,7 +93,13 @@ export const CheckoutModal = ({ open, onClose, restaurantId, restaurantPhone, pr
         if (item.extras.length) msg += ` (+${item.extras.map((e) => `${e.qty}x ${e.name}`).join(", ")})`;
         msg += "\n";
       });
-      msg += `\n*Total: R$ ${total.toFixed(2).replace(".", ",")}*`;
+
+      msg += `\n*Subtotal: R$ ${total.toFixed(2).replace(".", ",")}*`;
+      if (appliedCoupon) {
+        const discountAmount = total - calculatedTotal;
+        msg += `\n*Desconto (${appliedCoupon.code}): -R$ ${discountAmount.toFixed(2).replace(".", ",")}*`;
+      }
+      msg += `\n*Total a Pagar: R$ ${calculatedTotal.toFixed(2).replace(".", ",")}*`;
       msg += `\nTipo: ${orderType === "delivery" ? "Delivery" : "Retirada"}`;
       if (orderType === "delivery") msg += `\nEndereco: ${deliveryAddr}`;
       msg += `\nCliente: ${name} - ${phone}`;
@@ -162,6 +208,35 @@ export const CheckoutModal = ({ open, onClose, restaurantId, restaurantPhone, pr
                       </div>
                     </motion.div>
                   )}
+
+                  <div className="pt-4 border-t border-border mt-4">
+                    <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+                      <Ticket className="w-4 h-4 text-primary" />
+                      Cupom de Desconto
+                    </h3>
+                    <div className="flex gap-2">
+                      <input
+                        value={couponCode}
+                        onChange={(e) => setCouponCode(e.target.value)}
+                        placeholder="Possui um cupom?"
+                        className="flex-1 px-4 py-2.5 rounded-xl bg-card border border-border text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-ring text-sm uppercase"
+                      />
+                      <button
+                        onClick={handleApplyCoupon}
+                        disabled={checkingCoupon || !couponCode}
+                        className="px-4 py-2.5 rounded-xl bg-muted text-foreground font-medium text-sm hover:opacity-90 transition-opacity disabled:opacity-50"
+                      >
+                        {checkingCoupon ? "..." : "Aplicar"}
+                      </button>
+                    </div>
+                    {appliedCoupon && (
+                      <div className="mt-2 text-xs font-semibold text-green-500 bg-green-500/10 px-3 py-2 rounded-lg flex items-center justify-between">
+                        <span>Cupom {appliedCoupon.code} aplicado!</span>
+                        <span>- R$ {(total - calculatedTotal).toFixed(2).replace(".", ",")}</span>
+                      </div>
+                    )}
+                  </div>
+
                 </div>
               )}
 
@@ -227,13 +302,14 @@ export const CheckoutModal = ({ open, onClose, restaurantId, restaurantPhone, pr
                   style={{ backgroundColor: accentColor }}
                 >
                   <MessageCircle className="h-5 w-5" />
-                  {submitting ? "Enviando..." : `Enviar Pedido — R$ ${total.toFixed(2).replace(".", ",")}`}
+                  {submitting ? "Enviando..." : `Enviar Pedido — R$ ${calculatedTotal.toFixed(2).replace(".", ",")}`}
                 </button>
               )}
             </div>
           </motion.div>
         </>
-      )}
-    </AnimatePresence>
+      )
+      }
+    </AnimatePresence >
   );
 };

@@ -3,8 +3,12 @@ import { AdminLayout } from "@/components/admin/AdminLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { MessageCircle, GripVertical, Volume2, VolumeX, CheckCircle2 } from "lucide-react";
+import { MessageCircle, GripVertical, Volume2, VolumeX, CheckCircle2, FileText, MapPin, Receipt, Clock } from "lucide-react";
 import { toast } from "sonner";
+import { HelpTutorialModal } from "@/components/admin/HelpTutorialModal";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 
 interface OrderWithItems {
   id: string;
@@ -39,6 +43,7 @@ const AdminOrders = () => {
   const [draggedOrder, setDraggedOrder] = useState<string | null>(null);
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [dismissedOrders, setDismissedOrders] = useState<Set<string>>(new Set());
+  const [selectedOrder, setSelectedOrder] = useState<OrderWithItems | null>(null);
   const prevOrderCount = useRef<number>(0);
   const audioContextRef = useRef<AudioContext | null>(null);
 
@@ -150,6 +155,16 @@ const AdminOrders = () => {
 
   return (
     <AdminLayout>
+      <HelpTutorialModal
+        tutorialKey="admin_orders"
+        title="Gestão de Pedidos"
+        steps={[
+          { title: "Controle de Pedidos", description: "Esta tela mostra o fluxo completo dos pedidos do seu restaurante em formato Kanban." },
+          { title: "Mover Pedidos", description: "Clique e arraste os cartões, ou clique neles para visualizar os detalhes. Você também pode alterá-los de status para 'Em Preparo', 'Saiu p/ Entrega' ou 'Concluído'." },
+          { title: "Detalhes e Impressão", description: "Ao clicar num pedido, você será capaz de visualizar exatamente o que o cliente pediu (com as observações e extras), além de poder mandar mensagens pelo WhatsApp." },
+          { title: "Notificações", description: "Seu sistema fará um som sempre que um novo pedido chegar, não se esqueça de ativar as notificações ou clicar no botão de som para testar." },
+        ]}
+      />
       <div className="p-6 max-w-7xl mx-auto">
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-2xl font-bold text-foreground">Gestão de Pedidos</h1>
@@ -189,7 +204,11 @@ const AdminOrders = () => {
                       <div
                         key={order.id}
                         draggable
-                        onDragStart={() => setDraggedOrder(order.id)}
+                        onDragStart={(e) => {
+                          e.stopPropagation();
+                          setDraggedOrder(order.id);
+                        }}
+                        onClick={() => setSelectedOrder(order)}
                         className="bg-card rounded-xl border border-border p-4 cursor-grab active:cursor-grabbing hover:shadow-md transition-shadow"
                       >
                         <div className="flex items-center justify-between mb-2">
@@ -260,6 +279,118 @@ const AdminOrders = () => {
           ))}
         </div>
       </div>
+
+      <Dialog open={!!selectedOrder} onOpenChange={(open) => !open && setSelectedOrder(null)}>
+        <DialogContent className="sm:max-w-md max-h-[90vh] flex flex-col overflow-hidden">
+          <DialogHeader>
+            <div className="flex items-center justify-between">
+              <DialogTitle className="text-xl">Pedido #{selectedOrder ? getOrderNumber(selectedOrder) : ""}</DialogTitle>
+              {selectedOrder && (
+                <Badge variant="outline" className={`
+                  ${selectedOrder.order_type === "DELIVERY" ? "bg-primary/10 text-primary border-primary/20" :
+                    selectedOrder.order_type === "LOCAL" ? "bg-warning/10 text-warning border-warning/20" :
+                      "bg-accent/10 text-accent border-accent/20"}
+                `}>
+                  {getOrderTypeLabel(selectedOrder.order_type)}
+                </Badge>
+              )}
+            </div>
+            {selectedOrder && (
+              <DialogDescription className="text-muted-foreground flex items-center gap-1 mt-1">
+                <Clock className="w-3.5 h-3.5" />
+                Criado às {new Date(selectedOrder.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              </DialogDescription>
+            )}
+          </DialogHeader>
+
+          {selectedOrder && (
+            <div className="flex-1 overflow-y-auto pr-2 space-y-4 py-4">
+              {/* Customer Info */}
+              <div className="space-y-2 bg-muted/40 p-3 rounded-xl border border-border">
+                <div className="flex gap-2">
+                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                    <span className="font-semibold text-primary">{selectedOrder.customer_name.charAt(0)}</span>
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-foreground text-sm leading-tight">{selectedOrder.customer_name}</h3>
+                    {selectedOrder.customer_phone && <p className="text-sm text-foreground">{selectedOrder.customer_phone}</p>}
+                  </div>
+                </div>
+                {selectedOrder.delivery_address && (
+                  <div className="flex items-start gap-2 text-sm text-muted-foreground mt-2">
+                    <MapPin className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                    <span>{selectedOrder.delivery_address}</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Order Items */}
+              <div>
+                <h3 className="font-semibold text-foreground flex items-center gap-2 mb-3">
+                  <Receipt className="w-4 h-4 text-primary" />
+                  Itens do Pedido
+                </h3>
+                <div className="space-y-3">
+                  {selectedOrder.order_items.map((item, i) => (
+                    <div key={item.id || i} className="bg-card p-3 rounded-xl border border-border">
+                      <div className="flex items-start justify-between">
+                        <div className="font-medium text-sm">
+                          <span className="text-primary font-bold mr-2">{item.quantity}x</span>
+                          {item.products?.name || "Produto sem nome"}
+                        </div>
+                        <span className="text-sm font-semibold">
+                          R$ {(item.quantity * item.unit_price).toFixed(2).replace(".", ",")}
+                        </span>
+                      </div>
+
+                      {item.notes && (
+                        <div className="mt-2 text-sm text-destructive bg-destructive/5 p-2 rounded-lg flex items-start gap-2">
+                          <FileText className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                          <span className="font-medium">Obs: {item.notes}</span>
+                        </div>
+                      )}
+
+                      {item.extras_json && Array.isArray(item.extras_json) && item.extras_json.length > 0 && (
+                        <div className="mt-2 pl-3 border-l-2 border-accent/30 space-y-1">
+                          {(item.extras_json as any[]).map((extra: any, index: number) => (
+                            <div key={index} className="flex items-center justify-between text-xs">
+                              <span className="text-muted-foreground">
+                                + {extra.qty}x {extra.name}
+                              </span>
+                              <span className="text-accent font-medium">
+                                R$ {(extra.qty * extra.price).toFixed(2).replace(".", ",")}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Summary */}
+              <div className="pt-4 border-t border-border">
+                <div className="flex items-center justify-between text-sm text-muted-foreground mb-1">
+                  <span>Método de Pagamento</span>
+                  <span>{selectedOrder.payment_method}</span>
+                </div>
+                {selectedOrder.change_for && (
+                  <div className="flex items-center justify-between text-sm text-warning mb-2">
+                    <span>Troco para</span>
+                    <span>R$ {selectedOrder.change_for.toFixed(2).replace(".", ",")}</span>
+                  </div>
+                )}
+                <Separator className="my-2" />
+                <div className="flex items-center justify-between font-bold text-lg mt-2">
+                  <span>Total</span>
+                  <span className="text-primary">R$ {Number(selectedOrder.total_amount).toFixed(2).replace(".", ",")}</span>
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </AdminLayout>
   );
 };

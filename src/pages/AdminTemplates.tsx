@@ -6,11 +6,25 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Check, ChevronLeft, ChevronRight, Plus, Trash2, Edit3, Save, X, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
-import { menuTemplates, type MenuTemplate, type TemplateProduct } from "@/data/menuTemplates";
+import { menuTemplates, type MenuTemplate, type TemplateProduct, type TemplateExtra } from "@/data/menuTemplates";
 import { useNavigate } from "react-router-dom";
+import { HelpTutorialModal } from "@/components/admin/HelpTutorialModal";
+import { useQuery } from "@tanstack/react-query";
+
+interface EditableRecipeItem {
+    ingredient_id: string;
+    quantity: number;
+}
+
+interface EditableExtra extends TemplateExtra {
+    ingredient_id?: string;
+    quantity_used?: number;
+}
 
 interface EditableProduct extends TemplateProduct {
     _removed?: boolean;
+    recipe?: EditableRecipeItem[];
+    editedExtras?: EditableExtra[];
 }
 
 interface SelectedTemplate extends MenuTemplate {
@@ -38,6 +52,18 @@ const AdminTemplates = () => {
         });
     };
 
+    // Fetch ingredients for mapping
+    const { data: ingredientsData } = useQuery({
+        queryKey: ["ingredients", restaurantId],
+        queryFn: async () => {
+            if (!restaurantId) return [];
+            const { data, error } = await supabase.from("ingredients").select("*").eq("restaurant_id", restaurantId);
+            if (error) throw error;
+            return data;
+        },
+        enabled: !!restaurantId,
+    });
+
     // Move to step 2
     const goToStep2 = () => {
         if (selectedIds.size === 0) {
@@ -48,14 +74,18 @@ const AdminTemplates = () => {
             .filter((t) => selectedIds.has(t.id))
             .map((t) => ({
                 ...t,
-                products: t.products.map((p) => ({ ...p })),
+                products: t.products.map((p) => ({
+                    ...p,
+                    recipe: [],
+                    editedExtras: p.extras ? p.extras.map(e => ({ ...e })) : []
+                })),
             }));
         setEditableTemplates(selected);
         setStep(2);
     };
 
     // Step 2: product editing helpers
-    const updateProduct = (templateId: string, index: number, field: keyof TemplateProduct, value: string | number) => {
+    const updateProduct = (templateId: string, index: number, field: keyof EditableProduct, value: any) => {
         setEditableTemplates((prev) =>
             prev.map((t) => {
                 if (t.id !== templateId) return t;
@@ -98,6 +128,9 @@ const AdminTemplates = () => {
         }
         setSaving(true);
         try {
+            // Keep track of created categories for cross-selling mapping: template.id -> db_category_id
+            const createdCategories: Record<string, string> = {};
+
             for (const template of editableTemplates) {
                 const validProducts = template.products.filter((p) => p.name.trim());
                 if (validProducts.length === 0) continue;
@@ -111,20 +144,77 @@ const AdminTemplates = () => {
                 if (catError) throw catError;
 
                 const categoryId = catData.id;
+                createdCategories[template.id] = categoryId;
 
-                // Create products
-                const productInserts = validProducts.map((p) => ({
-                    name: p.name,
-                    description: p.description,
-                    sell_price: p.price,
-                    category: template.name,
-                    category_id: categoryId,
-                    restaurant_id: restaurantId,
-                    is_active: true,
-                }));
+                // Create products one by one to use their IDs for recipes and extras
+                for (const p of validProducts) {
+                    const { data: prodData, error: prodError } = await supabase
+                        .from("products")
+                        .insert({
+                            name: p.name,
+                            description: p.description,
+                            sell_price: p.price,
+                            image_url: p.image_url,
+                            category: template.name,
+                            category_id: categoryId,
+                            restaurant_id: restaurantId,
+                            is_active: true,
+                        })
+                        .select("id")
+                        .single();
 
-                const { error: prodError } = await supabase.from("products").insert(productInserts);
-                if (prodError) throw prodError;
+                    if (prodError) throw prodError;
+
+                    // Insert recipes
+                    if (p.recipe && p.recipe.length > 0) {
+                        const recipeInserts = p.recipe.map(r => ({
+                            product_id: prodData.id,
+                            ingredient_id: r.ingredient_id,
+                            quantity_used: r.quantity,
+                            can_remove: true
+                        }));
+                        await supabase.from("recipes").insert(recipeInserts);
+                    }
+
+                    // Insert extras
+                    if (p.editedExtras && p.editedExtras.length > 0) {
+                        const extraInserts = p.editedExtras.map(e => ({
+                            product_id: prodData.id,
+                            name: e.name,
+                            price: e.price,
+                            ingredient_id: e.ingredient_id || null,
+                            is_active: true,
+                            quantity_used: e.ingredient_id ? 1 : 0
+                        }));
+                        await supabase.from("extras").insert(extraInserts);
+                    }
+                }
+            }
+
+            // Post-process cross-selling rules
+            const { data: existingCategories } = await supabase.from("categories").select("id, name").eq("restaurant_id", restaurantId);
+            for (const template of editableTemplates) {
+                if (!template.crossSell || template.crossSell.length === 0) continue;
+
+                const triggerCatId = createdCategories[template.id];
+                if (!triggerCatId) continue;
+
+                for (const crossTemplateId of template.crossSell) {
+                    const targetTemplate = menuTemplates.find(t => t.id === crossTemplateId);
+                    if (!targetTemplate) continue;
+
+                    // Find if the target category exists in the DB (created just now or previously)
+                    const suggestCatId = createdCategories[crossTemplateId] || existingCategories?.find(c => c.name === targetTemplate.name)?.id;
+                    if (suggestCatId) {
+                        // Create cross-sell rule
+                        await supabase.from("cross_sell_rules").insert({
+                            restaurant_id: restaurantId,
+                            trigger_category_id: triggerCatId,
+                            suggest_category_id: suggestCatId,
+                            step_label: `Vai um(a) ${targetTemplate.name}?`,
+                        });
+                    }
+                }
             }
 
             // Invalidate all related queries
@@ -145,6 +235,15 @@ const AdminTemplates = () => {
 
     return (
         <AdminLayout>
+            <HelpTutorialModal
+                tutorialKey="admin_templates"
+                title="Construtor de Cardápio"
+                steps={[
+                    { title: "Templates Prontos", description: "Selecione categorias prontas (como Hambúrgueres, Pizzas) para adicionar diversos itens de uma só vez ao seu cardápio." },
+                    { title: "Passo 2 - Edição em Lote", description: "Antes de salvar, você pode editar o preço ou remover os itens que não serve. Clicando em cada item, você poderá vincular os Insumos que serão baixados a cada venda." },
+                    { title: "Insumos Especiais", description: "Os produtos turbinados, bebidas e complementos serão automaticamente gerados na mesma magia do sistema para impulsionar suas vendas!" },
+                ]}
+            />
             <div className="p-6 max-w-6xl mx-auto space-y-6">
                 {/* Header */}
                 <div className="flex items-center justify-between">
@@ -192,14 +291,14 @@ const AdminTemplates = () => {
                                         key={template.id}
                                         onClick={() => toggleSelection(template.id)}
                                         className={`relative text-left p-5 rounded-2xl border-2 transition-all duration-200 hover:shadow-lg ${isSelected
-                                                ? "border-primary bg-primary/5 shadow-md ring-2 ring-primary/20"
-                                                : "border-border bg-card hover:border-primary/30"
+                                            ? "border-primary bg-primary/5 shadow-md ring-2 ring-primary/20"
+                                            : "border-border bg-card hover:border-primary/30"
                                             }`}
                                     >
                                         {/* Selection indicator */}
                                         <div className={`absolute top-3 right-3 h-6 w-6 rounded-full flex items-center justify-center transition-all ${isSelected
-                                                ? "bg-primary text-primary-foreground scale-100"
-                                                : "border-2 border-muted-foreground/30 scale-90"
+                                            ? "bg-primary text-primary-foreground scale-100"
+                                            : "border-2 border-muted-foreground/30 scale-90"
                                             }`}>
                                             {isSelected && <Check className="h-4 w-4" />}
                                         </div>
@@ -293,13 +392,145 @@ const AdminTemplates = () => {
                                                                 className="text-sm"
                                                             />
                                                         </div>
-                                                        <div className="flex justify-end">
+
+                                                        {/* Recipe Mapping */}
+                                                        <div className="pt-3 border-t border-border mt-3">
+                                                            <div className="flex items-center gap-2 mb-2">
+                                                                <label className="text-xs font-bold text-foreground">Insumos (Receita)</label>
+                                                                <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full">Gerencia o Estoque</span>
+                                                            </div>
+                                                            <div className="space-y-2">
+                                                                {product.recipe?.map((recipeItem, rIdx) => {
+                                                                    const ingredient = ingredientsData?.find(i => i.id === recipeItem.ingredient_id);
+                                                                    return (
+                                                                        <div key={rIdx} className="flex grid-cols-1 sm:grid-cols-2 gap-2 text-sm bg-muted/30 p-2 rounded-lg items-center">
+                                                                            <span className="flex-1 truncate text-foreground font-medium">{ingredient?.name || 'Insumo não encontrado'}</span>
+                                                                            <div className="flex items-center gap-2 shrink-0">
+                                                                                <Input
+                                                                                    type="number"
+                                                                                    className="w-20 h-8 text-xs"
+                                                                                    value={recipeItem.quantity}
+                                                                                    onChange={(e) => {
+                                                                                        const newRecipe = [...(product.recipe || [])];
+                                                                                        newRecipe[rIdx].quantity = Number(e.target.value);
+                                                                                        updateProduct(template.id, idx, "recipe", newRecipe as any);
+                                                                                    }}
+                                                                                />
+                                                                                <span className="text-muted-foreground text-xs w-8">{ingredient?.unit || 'un'}</span>
+                                                                                <button onClick={() => {
+                                                                                    const newRecipe = product.recipe?.filter((_, i) => i !== rIdx);
+                                                                                    updateProduct(template.id, idx, "recipe", newRecipe as any);
+                                                                                }} className="text-destructive p-1 hover:bg-destructive/10 rounded">
+                                                                                    <X className="h-4 w-4" />
+                                                                                </button>
+                                                                            </div>
+                                                                        </div>
+                                                                    );
+                                                                })}
+                                                                <div className="flex gap-2">
+                                                                    <select
+                                                                        className="flex-1 text-sm bg-card border border-border rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary"
+                                                                        onChange={(e) => {
+                                                                            if (!e.target.value) return;
+                                                                            const newRecipe = [...(product.recipe || []), { ingredient_id: e.target.value, quantity: 1 }];
+                                                                            updateProduct(template.id, idx, "recipe", newRecipe as any);
+                                                                            e.target.value = "";
+                                                                        }}
+                                                                        defaultValue=""
+                                                                    >
+                                                                        <option value="" disabled>Adicionar insumo à receita...</option>
+                                                                        {ingredientsData?.filter(ing => !product.recipe?.some(r => r.ingredient_id === ing.id)).map(ing => (
+                                                                            <option key={ing.id} value={ing.id}>{ing.name}</option>
+                                                                        ))}
+                                                                    </select>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Extras Mapping */}
+                                                        {product.editedExtras && product.editedExtras.length > 0 && (
+                                                            <div className="pt-3 border-t border-border mt-3">
+                                                                <label className="text-xs font-bold text-foreground mb-2 block">Turbinar Produto (Extras Extras)</label>
+                                                                <div className="space-y-2">
+                                                                    {product.editedExtras?.map((extra, eIdx) => (
+                                                                        <div key={eIdx} className="grid grid-cols-1 sm:grid-cols-12 gap-2 p-2 bg-muted/20 rounded-lg items-center border border-border/50">
+                                                                            <div className="sm:col-span-5">
+                                                                                <Input
+                                                                                    value={extra.name}
+                                                                                    onChange={(e) => {
+                                                                                        const newExtras = [...(product.editedExtras || [])];
+                                                                                        newExtras[eIdx].name = e.target.value;
+                                                                                        updateProduct(template.id, idx, "editedExtras", newExtras as any);
+                                                                                    }}
+                                                                                    className="h-8 text-xs"
+                                                                                    placeholder="Nome do extra"
+                                                                                />
+                                                                            </div>
+                                                                            <div className="sm:col-span-3">
+                                                                                <div className="flex items-center gap-1">
+                                                                                    <span className="text-xs text-muted-foreground pl-1">R$</span>
+                                                                                    <Input
+                                                                                        type="number"
+                                                                                        step="0.01"
+                                                                                        value={extra.price}
+                                                                                        onChange={(e) => {
+                                                                                            const newExtras = [...(product.editedExtras || [])];
+                                                                                            newExtras[eIdx].price = Number(e.target.value);
+                                                                                            updateProduct(template.id, idx, "editedExtras", newExtras as any);
+                                                                                        }}
+                                                                                        className="h-8 text-xs font-mono"
+                                                                                    />
+                                                                                </div>
+                                                                            </div>
+                                                                            <div className="sm:col-span-3">
+                                                                                <select
+                                                                                    className="w-full text-xs bg-card border border-border rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary h-8"
+                                                                                    value={extra.ingredient_id || ""}
+                                                                                    onChange={(e) => {
+                                                                                        const newExtras = [...(product.editedExtras || [])];
+                                                                                        newExtras[eIdx].ingredient_id = e.target.value || undefined;
+                                                                                        updateProduct(template.id, idx, "editedExtras", newExtras as any);
+                                                                                    }}
+                                                                                >
+                                                                                    <option value="">Vincular Insumo...</option>
+                                                                                    {ingredientsData?.map(ing => (
+                                                                                        <option key={ing.id} value={ing.id}>{ing.name}</option>
+                                                                                    ))}
+                                                                                </select>
+                                                                            </div>
+                                                                            <div className="sm:col-span-1 flex justify-end">
+                                                                                <button
+                                                                                    onClick={() => {
+                                                                                        const newExtras = product.editedExtras?.filter((_, i) => i !== eIdx);
+                                                                                        updateProduct(template.id, idx, "editedExtras", newExtras as any);
+                                                                                    }}
+                                                                                    className="text-destructive p-1 hover:bg-destructive/10 rounded"
+                                                                                >
+                                                                                    <Trash2 className="h-4 w-4" />
+                                                                                </button>
+                                                                            </div>
+                                                                        </div>
+                                                                    ))}
+                                                                    <button
+                                                                        onClick={() => {
+                                                                            const newExtras = [...(product.editedExtras || []), { name: "Novo Extra", price: 0 }];
+                                                                            updateProduct(template.id, idx, "editedExtras", newExtras as any);
+                                                                        }}
+                                                                        className="text-xs text-primary font-medium hover:underline flex items-center gap-1 pt-1"
+                                                                    >
+                                                                        <Plus className="h-3 w-3" /> Adicionar Extra
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        )}
+
+                                                        <div className="flex justify-end pt-2">
                                                             <button
                                                                 onClick={() => setEditingProduct(null)}
-                                                                className="flex items-center gap-1.5 text-sm text-primary font-medium hover:opacity-80"
+                                                                className="flex items-center gap-1.5 text-sm bg-primary text-primary-foreground px-4 py-2 rounded-lg font-medium hover:opacity-90 transition-opacity"
                                                             >
                                                                 <Check className="h-4 w-4" />
-                                                                Concluir
+                                                                Concluir Edição
                                                             </button>
                                                         </div>
                                                     </div>

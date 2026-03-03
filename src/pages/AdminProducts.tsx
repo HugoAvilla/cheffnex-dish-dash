@@ -10,6 +10,7 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import type { Tables } from "@/integrations/supabase/types";
+import { HelpTutorialModal } from "@/components/admin/HelpTutorialModal";
 
 type Product = Tables<"products">;
 
@@ -286,6 +287,16 @@ const AdminProducts = () => {
 
   return (
     <AdminLayout>
+      <HelpTutorialModal
+        tutorialKey="admin_products"
+        title="Gestão de Produtos"
+        steps={[
+          { title: "Bem-vindo aos Produtos!", description: "Aqui você gerencia todo o cardápio do seu estabelecimento. Você pode criar, editar ou excluir produtos." },
+          { title: "Criar ou Editar", description: "Use o formulário na parte superior para cadastrar novos produtos. Preencha nome, preço, categoria e, opcionalmente, envie uma foto atrativa." },
+          { title: "Insumos (Receita)", description: "Ao editar um produto, você pode vincular insumos do seu estoque para dar baixa automática quando o item for vendido." },
+          { title: "Ativar / Desativar", description: "Use as chavinhas na lista abaixo para pausar a venda de um produto sem precisar excluí-lo do sistema." },
+        ]}
+      />
       <div className="p-6 max-w-5xl mx-auto space-y-6">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold text-foreground">Produtos</h1>
