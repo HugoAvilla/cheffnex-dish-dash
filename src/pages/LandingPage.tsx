@@ -71,7 +71,7 @@ const LandingPage = () => {
                         O Cheffnex mostra exatamente onde o desperdício está comendo sua margem.
                     </p>
                     <div className="hero-acts" data-aos="fade-up" data-aos-delay="200" data-aos-duration="1000">
-                        <a href="#pricing" className="btn btn-p">Quero Estancar meu desperdício AGORA</a>
+                        <a href="#pricing" className="btn btn-hero">👍 Quero Estancar meu desperdício AGORA</a>
                     </div>
 
                     <div className="dash-wrap" data-aos="zoom-in-up" data-aos-duration="1200" data-aos-delay="300">
@@ -324,10 +324,10 @@ const LandingPage = () => {
                             <span className="pop-badge">🔥 MAIS POPULAR</span>
                             <span className="plan-tag best" style={{ marginTop: 24 }}>Melhor custo-benefício</span>
                             <h3 className="plan-name fo">Anual</h3>
-                            <span className="save-badge">Economize mais de 70%</span>
+                            <span className="save-badge">Economize mais de 50%</span>
                             <p className="price-old">De R$ 997</p>
-                            <p className="price-val">R$ 39,90<span> /mês</span></p>
-                            <p className="price-period">12x — Acesso por 1 ano completo</p>
+                            <p className="price-val">12xR$ 39,90<span> /mês</span></p>
+                            <p className="price-period">Acesso por 1 ano completo</p>
                             <ul className="feat-list">
                                 <li><span className="ck">✓</span><span style={{ color: "#fff", fontWeight: 600 }}>✨ TUDO do plano Mensal +</span></li>
                                 {features.map((f, i) => (
@@ -395,10 +395,10 @@ const LandingPage = () => {
                             <span style={{ maxWidth: 300 }}>Transformando desperdício invisível em controle real.</span>
                         </div>
                         <div className="f-col" style={{ textAlign: "right" }}>
-                            <strong>Contato</strong>
-                            <span>suporte@cheffnex.com.br</span>
-                            <span>Praça Central, S/N - São Paulo/SP</span>
-                            <span>CNPJ: 00.000.000/0001-00</span>
+                            <strong>Fale com Nosso Suporte</strong>
+                            <span>Hugo Avila 17 99257-3141</span>
+                            <span>Gmail Customapp01@gmail.com</span>
+                            <span>São Jose do Rio Preto - São Paulo/SP</span>
                         </div>
                     </div>
                     <div className="f-bot">

@@ -194,6 +194,23 @@
     background: #ff6e42
 }
 
+.btn-hero {
+    background: var(--pr);
+    color: #fff;
+    font-size: 1.1rem;
+    padding: 18px 32px;
+    box-shadow: 0 8px 40px rgba(255, 90, 38, .5);
+    width: 100%;
+    font-weight: 700;
+    letter-spacing: .3px
+}
+
+.btn-hero:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 16px 56px rgba(255, 90, 38, .6);
+    background: #ff6e42
+}
+
 /* Badge */
 .badge {
     display: inline-flex;
