@@ -11,6 +11,7 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ErrorToast } from "@/components/ErrorToast";
 import { UpdateBanner } from "@/components/UpdateBanner";
 import { captureError } from "@/lib/errorHandler";
+import LandingPage from "./pages/LandingPage";
 import Menu from "./pages/Menu";
 import Cart from "./pages/Cart";
 import AdminLogin from "./pages/AdminLogin";
@@ -56,7 +57,7 @@ const App = () => (
               <ErrorToast />
               <BrowserRouter>
                 <Routes>
-                  <Route path="/" element={<Navigate to="/admin/login" replace />} />
+                  <Route path="/" element={<LandingPage />} />
                   <Route path="/menu" element={<Menu />} />
                   <Route path="/menu/:restaurantId" element={<Menu />} />
                   <Route path="/cart" element={<Cart />} />
