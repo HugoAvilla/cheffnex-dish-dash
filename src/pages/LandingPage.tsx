@@ -71,8 +71,7 @@ const LandingPage = () => {
                         O Cheffnex mostra exatamente onde o desperdício está comendo sua margem.
                     </p>
                     <div className="hero-acts" data-aos="fade-up" data-aos-delay="200" data-aos-duration="1000">
-                        <a href="#pricing" className="btn btn-p">👉 Ver onde estou perdendo dinheiro</a>
-                        <a href="#pricing" className="btn btn-s">Começar teste gratuito</a>
+                        <a href="#pricing" className="btn btn-p">Quero Estancar meu desperdício AGORA</a>
                     </div>
 
                     <div className="dash-wrap" data-aos="zoom-in-up" data-aos-duration="1200" data-aos-delay="300">
@@ -106,9 +105,17 @@ const LandingPage = () => {
                         <p>Todo restaurante perde dinheiro. O problema é quando ninguém sabe onde.</p>
                     </div>
                     <div className="pain-list" data-aos="fade-up" data-aos-delay="100">
-                        {["Insumos vencem.", "Porções saem diferentes.", "Compras são feitas \"por segurança\".", "O estoque fecha no papel — mas o caixa não."].map((t, i) => (
+                        {[
+                            ["Insumos vencem.", "clock-4"],
+                            ["Porções saem diferentes.", "scale"],
+                            ["Compras são feitas \"por segurança\".", "shield-alert"],
+                            ["O estoque fecha no papel — mas o caixa não.", "file-warning"],
+                            ["Chega de planilhas que não batem.", "table-2"],
+                            ["Chega de estoque no achismo.", "help-circle"],
+                            ["Chega de trabalhar 14 horas por dia sem saber se teve lucro.", "clock"],
+                        ].map(([t, icon], i) => (
                             <div className="pain-it" key={i}>
-                                <i data-lucide={["clock-4", "scale", "shield-alert", "file-warning"][i]} data-size="24" color="var(--no)" />
+                                <i data-lucide={icon} data-size="24" color="var(--no)" />
                                 <p style={{ fontWeight: 500 }}>{t}</p>
                             </div>
                         ))}
