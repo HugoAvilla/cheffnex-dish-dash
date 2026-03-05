@@ -187,9 +187,10 @@ const LandingPage = () => {
                     <div className="bento">
                         <div className="bc" data-aos="fade-up" data-aos-delay="100">
                             <div style={{ marginBottom: 24, color: "var(--pr)" }}><i data-lucide="menu-square" data-size="32" /></div>
-                            <h3>Cardápio Inteligente</h3>
-                            <p>O cardápio deixa de ser estático e vira ferramenta ativa de venda.</p>
-                            <ul><li>Criação e edição rápida</li><li>Categorias personalizadas</li><li>Preços, imagens e variações</li><li>Preview em tempo real</li></ul>
+                            <h3>🍽️ Cardápio Inteligente que Vende</h3>
+                            <p>Seu cardápio deixa de ser vergonha e vira <strong>ferramenta de venda</strong>.</p>
+                            <ul><li>Criação e edição em minutos</li><li>Preços, descrições, imagens e variações</li><li>Link bonito para enviar ao cliente</li><li>Atualização instantânea (sem PDF, sem designer)</li></ul>
+                            <p style={{ marginTop: 16, color: "var(--pr)", fontWeight: 600, fontSize: ".9rem" }}>📌 Mudou o preço do insumo? Dois cliques e pronto.</p>
                         </div>
                         <div className="bc bc-vt" data-aos="fade-up" data-aos-delay="200">
                             <div>
@@ -206,16 +207,18 @@ const LandingPage = () => {
                         </div>
                         <div className="bc" data-aos="fade-up" data-aos-delay="300">
                             <div style={{ marginBottom: 24, color: "var(--ok)" }}><i data-lucide="package" data-size="32" /></div>
-                            <h3>Estoque Conectado à Realidade</h3>
-                            <p>O estoque deixa de ser achismo e passa a ser dado confiável.</p>
-                            <ul><li>Produtos ligados a insumos</li><li>Entrada e saída visíveis</li><li>Consumo baseado em venda</li></ul>
+                            <h3>📦 Controle de Estoque sem Achismo</h3>
+                            <p>Aqui o estoque para de ser um <strong>cemitério de dinheiro</strong>.</p>
+                            <ul><li>Produtos conectados aos insumos</li><li>Visão clara do que entra e do que sai</li><li>Redução real de desperdício</li><li>Base sólida para controlar CMV</li></ul>
+                            <p style={{ marginTop: 16, color: "var(--ok)", fontWeight: 600, fontSize: ".9rem" }}>📌 Você sabe o que tem, o que falta e onde está vazando.</p>
                         </div>
                         <div className="bc bc-lg" data-aos="fade-up" data-aos-delay="400">
                             <div style={{ display: "flex", gap: 40, flexWrap: "wrap" }}>
                                 <div style={{ flex: 1, minWidth: 250 }}>
                                     <div style={{ marginBottom: 16, color: "#DDAA00" }}><i data-lucide="bar-chart-2" data-size="24" /></div>
-                                    <h3>Relatórios que Dão Direção</h3>
-                                    <p>Nada de gráfico inútil. Relatório aqui não é burocracia, é base para decisão.</p>
+                                    <h3>📊 Gestão Simples para Decidir Melhor</h3>
+                                    <p>Nada de gráfico inútil ou painel da NASA. Visão real de vendas, produtos mais rentáveis e leitura clara do resultado.</p>
+                                    <p style={{ marginTop: 8, color: "#DDAA00", fontWeight: 600, fontSize: ".85rem" }}>📌 Você deixa de "achar" e passa a saber.</p>
                                 </div>
                                 <div style={{ flex: 1, minWidth: 250 }}>
                                     <div style={{ marginBottom: 16, color: "#1EBD60" }}><i data-lucide="dollar-sign" data-size="24" /></div>
@@ -263,21 +266,30 @@ const LandingPage = () => {
             <section>
                 <div className="ct">
                     <div className="st" data-aos="fade-up">
-                        <h2>Validação Real</h2>
-                        <p>Resultados comuns entre restaurantes que eliminam desperdício com controle.</p>
+                        <h2>Quem usa, comprova.</h2>
+                        <p>Donos de restaurante reais. Resultados reais. Sem figuração.</p>
                     </div>
                     <div className="tg">
                         <div className="tc" data-aos="fade-up" data-aos-delay="100">
-                            <p className="qt">"O problema não era vender pouco. Era perder muito sem perceber."</p>
-                            <p className="rs">Redução de 20% a 30% em perdas</p>
+                            <div>
+                                <p style={{ color: "#DDAA00", marginBottom: 12, fontSize: "1.1rem" }}>⭐⭐⭐⭐⭐</p>
+                                <p className="qt">"Eu trabalhava muito e nunca via dinheiro. O Cheffnex foi o primeiro sistema que minha equipe conseguiu usar sem reclamar. Hoje sei exatamente onde estou ganhando e onde estava perdendo."</p>
+                            </div>
+                            <p className="rs">— João, dono de hamburgueria</p>
                         </div>
                         <div className="tc" style={{ backgroundColor: "#12100F" }} data-aos="fade-up" data-aos-delay="200">
-                            <p className="qt">O valor salvo em desperdício cobre amplamente o valor do software logo no início.</p>
-                            <p className="rs">Economia supera o custo gerado</p>
+                            <div>
+                                <p style={{ color: "#DDAA00", marginBottom: 12, fontSize: "1.1rem" }}>⭐⭐⭐⭐⭐</p>
+                                <p className="qt">"Meu estoque era um ralo invisível. Em poucas semanas, já reduzi desperdício e parei de jogar comida fora. Dormi tranquila pela primeira vez em anos."</p>
+                            </div>
+                            <p className="rs">— Carla, restaurante familiar</p>
                         </div>
                         <div className="tc" data-aos="fade-up" data-aos-delay="300">
-                            <p className="qt">Sem as dores de cabeça habituais no fechamento do caixa e inventário da despensa.</p>
-                            <p className="rs">Operação mais previsível</p>
+                            <div>
+                                <p style={{ color: "#DDAA00", marginBottom: 12, fontSize: "1.1rem" }}>⭐⭐⭐⭐⭐</p>
+                                <p className="qt">"Achei que sistema não era pra mim. O Cheffnex provou o contrário. É simples, visual e não trava no rush."</p>
+                            </div>
+                            <p className="rs">— Marcos, pizzaria delivery</p>
                         </div>
                     </div>
                 </div>
