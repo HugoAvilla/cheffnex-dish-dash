@@ -1,8 +1,62 @@
-import { useEffect } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
 import "./LandingPage.css";
 
+const TIMER_KEY = "cheffnex_offer_end";
+const TIMER_DURATION = 90 * 60 * 1000; // 1h30m
+
+const getEnd = (): number => {
+    const stored = localStorage.getItem(TIMER_KEY);
+    if (stored) {
+        const end = parseInt(stored, 10);
+        if (end > Date.now()) return end;
+    }
+    const end = Date.now() + TIMER_DURATION;
+    localStorage.setItem(TIMER_KEY, String(end));
+    return end;
+};
+
+const fmt = (ms: number) => {
+    if (ms <= 0) return { h: "00", m: "00", s: "00" };
+    const totalSec = Math.floor(ms / 1000);
+    const h = String(Math.floor(totalSec / 3600)).padStart(2, "0");
+    const m = String(Math.floor((totalSec % 3600) / 60)).padStart(2, "0");
+    const s = String(totalSec % 60).padStart(2, "0");
+    return { h, m, s };
+};
+
+const CountdownInline = ({ time, label }: { time: { h: string; m: string; s: string }; label?: string }) => (
+    <div className="cd-inline">
+        {label && <p className="cd-label">{label}</p>}
+        <div className="cd-digits">
+            <div className="cd-box"><span className="cd-num">{time.h}</span><span className="cd-unit">horas</span></div>
+            <span className="cd-sep">:</span>
+            <div className="cd-box"><span className="cd-num">{time.m}</span><span className="cd-unit">min</span></div>
+            <span className="cd-sep">:</span>
+            <div className="cd-box"><span className="cd-num">{time.s}</span><span className="cd-unit">seg</span></div>
+        </div>
+    </div>
+);
+
 const LandingPage = () => {
+    const [timeLeft, setTimeLeft] = useState(fmt(getEnd() - Date.now()));
+    const [showSticky, setShowSticky] = useState(false);
+
+    useEffect(() => {
+        const end = getEnd();
+        const tick = setInterval(() => {
+            const diff = end - Date.now();
+            setTimeLeft(fmt(diff));
+            if (diff <= 0) clearInterval(tick);
+        }, 1000);
+        return () => clearInterval(tick);
+    }, []);
+
+    useEffect(() => {
+        const onScroll = () => setShowSticky(window.scrollY > 600);
+        window.addEventListener("scroll", onScroll, { passive: true });
+        return () => window.removeEventListener("scroll", onScroll);
+    }, []);
     useEffect(() => {
         const els: HTMLElement[] = [];
         const add = (tag: string, attrs: Record<string, string>, parent = document.head) => {
@@ -47,6 +101,21 @@ const LandingPage = () => {
             {/* TRUST BADGE */}
             <div className="trust-top">
                 🔥 Mais de restaurantes já recuperaram margem eliminando desperdício invisível na cozinha.
+            </div>
+
+            {/* STICKY COUNTDOWN BAR */}
+            <div className={`sticky-bar ${showSticky ? "visible" : ""}`}>
+                <div className="ct" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 16, flexWrap: "wrap" }}>
+                    <span style={{ fontWeight: 700, fontSize: ".85rem" }}>🔥 OFERTA EXPIRA EM:</span>
+                    <div className="cd-digits cd-sm">
+                        <div className="cd-box-sm"><span className="cd-num-sm">{timeLeft.h}</span></div>
+                        <span className="cd-sep-sm">:</span>
+                        <div className="cd-box-sm"><span className="cd-num-sm">{timeLeft.m}</span></div>
+                        <span className="cd-sep-sm">:</span>
+                        <div className="cd-box-sm"><span className="cd-num-sm">{timeLeft.s}</span></div>
+                    </div>
+                    <a href="#pricing" style={{ background: "#fff", color: "var(--bg)", padding: "6px 16px", borderRadius: 100, fontWeight: 700, fontSize: ".8rem", fontFamily: "'Outfit'" }}>GARANTIR AGORA</a>
+                </div>
             </div>
 
             {/* NAV */}
@@ -302,6 +371,7 @@ const LandingPage = () => {
                         <h2>Quanto custa <span style={{ color: "var(--pr)" }}>não</span> controlar o estoque?</h2>
                         <p>Um insumo vencido, um erro de porcionamento, uma semana sem visibilidade… Tudo isso custa mais do que o Cheffnex.</p>
                     </div>
+                    <CountdownInline time={timeLeft} label="⏰ Oferta por tempo limitado — garanta o preço promocional:" />
                     <div className="price-grid">
                         {/* MENSAL */}
                         <div className="price-card" data-aos="fade-up" data-aos-delay="100">
@@ -372,6 +442,7 @@ const LandingPage = () => {
                         <p style={{ color: "var(--txm)", fontSize: "1.15rem", marginBottom: 8 }}>
                             Ative o Cheffnex agora. Configure em minutos. Veja onde está perdendo dinheiro <strong style={{ color: "#fff" }}>ainda hoje</strong>.
                         </p>
+                        <CountdownInline time={timeLeft} label="⏰ Esta oferta expira em:" />
                         <div className="micro-g">
                             <span><i data-lucide="shield-check" data-size="18" style={{ color: "var(--ok)" }} /> 7 dias grátis</span>
                             <span><i data-lucide="credit-card" data-size="18" style={{ color: "var(--ok)" }} /> Cancele quando quiser</span>
