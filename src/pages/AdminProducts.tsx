@@ -233,6 +233,9 @@ const AdminProducts = () => {
     mutationFn: async (id: string) => {
       await supabase.from("recipes").delete().eq("product_id", id);
       await supabase.from("extras").delete().eq("product_id", id);
+      await supabase.from("order_items").delete().eq("product_id", id);
+      await supabase.from("cart_items").delete().eq("product_id", id);
+      await supabase.from("menu_products").delete().eq("product_id", id);
       const { error } = await supabase.from("products").delete().eq("id", id);
       if (error) throw error;
     },
@@ -254,6 +257,9 @@ const AdminProducts = () => {
         const productIds = prods.map(p => p.id);
         await supabase.from("extras").delete().in("product_id", productIds);
         await supabase.from("recipes").delete().in("product_id", productIds);
+        await supabase.from("order_items").delete().in("product_id", productIds);
+        await supabase.from("cart_items").delete().in("product_id", productIds);
+        await supabase.from("menu_products").delete().in("product_id", productIds);
         const { error } = await supabase.from("products").delete().eq("restaurant_id", restaurantId);
         if (error) throw error;
       }
