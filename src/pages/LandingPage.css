@@ -90,18 +90,19 @@
 }
 
 .logo-img {
-    height: 90px;
-    width: auto;
+    height: auto;
+    width: 120px;
+    aspect-ratio: 3236 / 1280;
     display: block;
     object-fit: contain;
     -webkit-mask-image: radial-gradient(ellipse at center, rgba(0, 0, 0, 1) 40%, rgba(0, 0, 0, 0) 75%);
     mask-image: radial-gradient(ellipse at center, rgba(0, 0, 0, 1) 40%, rgba(0, 0, 0, 0) 75%);
-    transform: scale(1.2);
 }
 
 .logo-footer {
-    width: 280px;
+    width: 140px;
     height: auto;
+    aspect-ratio: 3236 / 1280;
     display: block;
     object-fit: contain;
     -webkit-mask-image: radial-gradient(ellipse at center, rgba(0, 0, 0, 1) 30%, rgba(0, 0, 0, 0) 75%);
