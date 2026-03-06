@@ -39,14 +39,25 @@ export function HelpTutorialModal({ tutorialKey, title, steps, forceShow = false
             return;
         }
 
+        const handleOpenEvent = () => {
+            setOpen(true);
+            setCurrentStep(0);
+        };
+        window.addEventListener('open-tutorial', handleOpenEvent);
+
         const hasHidden = localStorage.getItem(`hide_tutorial_${tutorialKey}`);
+        let timer: any;
         if (!hasHidden) {
             // Small delay to make it feel less intrusive on page load
-            const timer = setTimeout(() => {
+            timer = setTimeout(() => {
                 setOpen(true);
             }, 500);
-            return () => clearTimeout(timer);
         }
+
+        return () => {
+            window.removeEventListener('open-tutorial', handleOpenEvent);
+            if (timer) clearTimeout(timer);
+        };
     }, [tutorialKey, forceShow]);
 
     const handleClose = () => {

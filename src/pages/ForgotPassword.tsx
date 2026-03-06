@@ -47,14 +47,10 @@ const ForgotPassword = () => {
             <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-background">
                 <div className="w-full max-w-sm space-y-8">
                     <div className="flex flex-col items-center">
-                        <div
-                            className="flex items-center justify-center px-16 py-12 mb-2 w-full"
-                            style={{
-                                WebkitMaskImage: 'radial-gradient(ellipse at center, rgba(0, 0, 0, 1) 30%, rgba(0, 0, 0, 0) 70%)',
-                                maskImage: 'radial-gradient(ellipse at center, rgba(0, 0, 0, 1) 30%, rgba(0, 0, 0, 0) 70%)'
-                            }}
-                        >
-                            <img src={logoFinal} alt="CheffNex" className="h-32 w-auto object-contain" />
+                        <div className="flex items-center justify-center mb-8 w-full">
+                            <div className="rounded-3xl overflow-hidden shadow-2xl ring-1 ring-border/20">
+                                <img src={logoFinal} alt="CheffNex" className="h-24 sm:h-28 w-auto object-cover" />
+                            </div>
                         </div>
                         <h1 className="text-2xl font-bold text-foreground">Esqueceu sua senha?</h1>
                         <p className="text-muted-foreground mt-1 text-center">

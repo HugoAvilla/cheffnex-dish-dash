@@ -246,6 +246,28 @@ const AdminProducts = () => {
     onError: (err: Error) => toast.error(err.message),
   });
 
+  const deleteAllProductsMutation = useMutation({
+    mutationFn: async () => {
+      if (!restaurantId) throw new Error("Restaurante não identificado.");
+      const { data: prods } = await supabase.from("products").select("id").eq("restaurant_id", restaurantId);
+      if (prods && prods.length > 0) {
+        const productIds = prods.map(p => p.id);
+        await supabase.from("extras").delete().in("product_id", productIds);
+        await supabase.from("recipes").delete().in("product_id", productIds);
+        const { error } = await supabase.from("products").delete().eq("restaurant_id", restaurantId);
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+      queryClient.invalidateQueries({ queryKey: ["products-count"] });
+      queryClient.invalidateQueries({ queryKey: ["category-product-counts"] });
+      queryClient.invalidateQueries({ queryKey: ["menu-products"] });
+      toast.success("Todos os produtos foram excluídos.");
+    },
+    onError: (err: Error) => toast.error(err.message),
+  });
+
   const toggleActive = useMutation({
     mutationFn: async ({ id, is_active }: { id: string; is_active: boolean }) => {
       const { error } = await supabase.from("products").update({ is_active }).eq("id", id);
@@ -301,10 +323,30 @@ const AdminProducts = () => {
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold text-foreground">Produtos</h1>
           {!editingId && (
-            <button onClick={() => setEditingId("new")} className="flex items-center gap-2 bg-accent text-accent-foreground px-5 py-2.5 rounded-xl font-semibold hover:opacity-90">
-              <Plus className="h-4 w-4" />
-              Novo Produto
-            </button>
+            <div className="flex gap-2">
+              {products.length > 0 && (
+                <button
+                  onClick={() => {
+                    if (window.confirm("ATENÇÃO: Você tem certeza absoluta que deseja EXCLUIR TODOS OS PRODUTOS de uma vez? Esta ação é definitiva e não pode ser desfeita.")) {
+                      deleteAllProductsMutation.mutate();
+                    }
+                  }}
+                  disabled={deleteAllProductsMutation.isPending}
+                  className="flex items-center gap-2 bg-destructive/90 text-destructive-foreground px-4 py-2.5 rounded-xl font-semibold hover:bg-destructive transition-colors disabled:opacity-50 shadow-sm"
+                  title="Excluir Todos os Produtos"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  <span className="hidden sm:inline">Excluir Todos</span>
+                </button>
+              )}
+              <button
+                onClick={() => setEditingId("new")}
+                className="flex items-center gap-2 bg-accent text-accent-foreground px-5 py-2.5 rounded-xl font-semibold hover:opacity-90 shadow-sm"
+              >
+                <Plus className="h-4 w-4" />
+                Novo Produto
+              </button>
+            </div>
           )}
         </div>
 
