@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
 import "./LandingPage.css";
+import logoFinal from "@/assets/logo-final.png";
 
 const TIMER_KEY = "cheffnex_offer_end";
 const TIMER_DURATION = 90 * 60 * 1000; // 1h30m
@@ -122,8 +123,7 @@ const LandingPage = () => {
             <nav className="lp-nav">
                 <div className="ct">
                     <a href="#" className="logo">
-                        <div className="logo-ic"><i data-lucide="chef-hat" color="white" data-size="20" /></div>
-                        Cheffnex
+                        <img src={logoFinal} alt="Cheffnex" className="logo-img" />
                     </a>
                     <Link to="/admin/login" className="btn-enter">ENTRAR</Link>
                 </div>
@@ -396,92 +396,91 @@ const LandingPage = () => {
                             <h3 className="plan-name fo">Anual</h3>
                             <span className="save-badge">Economize mais de 50%</span>
                             <p className="price-old">De R$ 997</p>
-                            <p className="price-val">12x</span> R$ 39,90<span> /mês</span></p>
-                        <p className="price-period">Acesso por 1 ano completo</p>
-                        <ul className="feat-list">
-                            <li><span className="ck">✓</span><span style={{ color: "#fff", fontWeight: 600 }}>✨ TUDO do plano Mensal +</span></li>
-                            {features.map((f, i) => (
-                                <li key={i}><span className="ck">✓</span><span><strong>{f.split(" ")[0]} {f.split(" ")[1]}</strong> {f.split(" ").slice(2).join(" ")}</span></li>
-                            ))}
-                        </ul>
-                        <a href="https://wa.me/5500000000000" target="_blank" rel="noopener noreferrer" className="btn btn-cta" style={{ width: "100%", marginTop: 16 }}>
-                            👉 Quero eliminar o desperdício
-                        </a>
+                            <p className="price-val"><span>12x </span>R$ 39,90<span> /mês</span></p>
+                            <p className="price-period">Acesso por 1 ano completo</p>
+                            <ul className="feat-list">
+                                <li><span className="ck">✓</span><span style={{ color: "#fff", fontWeight: 600 }}>✨ TUDO do plano Mensal +</span></li>
+                                {features.map((f, i) => (
+                                    <li key={i}><span className="ck">✓</span><span><strong>{f.split(" ")[0]} {f.split(" ")[1]}</strong> {f.split(" ").slice(2).join(" ")}</span></li>
+                                ))}
+                            </ul>
+                            <a href="https://wa.me/5500000000000" target="_blank" rel="noopener noreferrer" className="btn btn-cta" style={{ width: "100%", marginTop: 16 }}>
+                                👉 Quero eliminar o desperdício
+                            </a>
+                        </div>
                     </div>
                 </div>
-        </div>
-            </section >
+            </section>
 
-    {/* FAQ */ }
-    < section >
-    <div className="ct">
-        <div className="st"><h2>Ainda tem dúvida?</h2></div>
-        <div className="faq-list">
-            {[
-                ["Preciso mudar toda minha operação?", "Não. O Cheffnex se adapta ao fluxo que você já usa. Sem dor de cabeça."],
-                ["Minha equipe vai conseguir usar?", "Sim. O sistema foi feito para funcionar no meio do rush. E o Bônus 2 (Assistente Invisível) treina sua equipe em tempo real."],
-                ["E se eu não tiver tempo para configurar?", "Nossos templates pré-configurados resolvem isso. Em 15 minutos seu cardápio está no ar."],
-                ["Vocês ajudam na configuração?", "Sim. Cardápio e estrutura inicial têm suporte total da nossa equipe."],
-                ["Funciona para restaurante pequeno?", "Principalmente. Onde a margem é curta, o desperdício dói mais. E é onde o Cheffnex mais brilha."],
-                ["É só controle de estoque?", "Não. Estoque é o começo. O controle se estende a cardápio, pedidos, vendas e financeiro completo."],
-                ["E se não funcionar para mim?", "Você tem 7 dias de teste sem risco. Se não enxergar resultado, cancela com 1 clique. Sem perguntas."],
-            ].map(([q, a], i) => (
-                <div className="faq-it" key={i} data-aos="fade-up" data-aos-delay={String(i * 50 + 100)}>
-                    <strong>{q}</strong><p>{a}</p>
+            {/* FAQ */}
+            <section>
+                <div className="ct">
+                    <div className="st"><h2>Ainda tem dúvida?</h2></div>
+                    <div className="faq-list">
+                        {[
+                            ["Preciso mudar toda minha operação?", "Não. O Cheffnex se adapta ao fluxo que você já usa. Sem dor de cabeça."],
+                            ["Minha equipe vai conseguir usar?", "Sim. O sistema foi feito para funcionar no meio do rush. E o Bônus 2 (Assistente Invisível) treina sua equipe em tempo real."],
+                            ["E se eu não tiver tempo para configurar?", "Nossos templates pré-configurados resolvem isso. Em 15 minutos seu cardápio está no ar."],
+                            ["Vocês ajudam na configuração?", "Sim. Cardápio e estrutura inicial têm suporte total da nossa equipe."],
+                            ["Funciona para restaurante pequeno?", "Principalmente. Onde a margem é curta, o desperdício dói mais. E é onde o Cheffnex mais brilha."],
+                            ["É só controle de estoque?", "Não. Estoque é o começo. O controle se estende a cardápio, pedidos, vendas e financeiro completo."],
+                            ["E se não funcionar para mim?", "Você tem 7 dias de teste sem risco. Se não enxergar resultado, cancela com 1 clique. Sem perguntas."],
+                        ].map(([q, a], i) => (
+                            <div className="faq-it" key={i} data-aos="fade-up" data-aos-delay={String(i * 50 + 100)}>
+                                <strong>{q}</strong><p>{a}</p>
+                            </div>
+                        ))}
+                    </div>
                 </div>
-            ))}
-        </div>
-    </div>
-            </section >
+            </section>
 
-    {/* CTA FINAL */ }
-    < section className = "final-cta" >
-        <div className="ct">
-            <div className="cta-box" data-aos="zoom-in" data-aos-duration="1000">
-                <h2 style={{ fontSize: "2rem", marginBottom: 16 }} className="fo">O próximo passo é simples.</h2>
-                <p style={{ color: "var(--txm)", fontSize: "1.15rem", marginBottom: 8 }}>
-                    Ative o Cheffnex agora. Configure em minutos. Veja onde está perdendo dinheiro <strong style={{ color: "#fff" }}>ainda hoje</strong>.
-                </p>
-                <CountdownInline time={timeLeft} label="⏰ Esta oferta expira em:" />
-                <div className="micro-g">
-                    <span><i data-lucide="shield-check" data-size="18" style={{ color: "var(--ok)" }} /> 7 dias grátis</span>
-                    <span><i data-lucide="credit-card" data-size="18" style={{ color: "var(--ok)" }} /> Cancele quando quiser</span>
-                    <span><i data-lucide="lock" data-size="18" style={{ color: "var(--ok)" }} /> Pagamento seguro</span>
+            {/* CTA FINAL */}
+            <section className="final-cta">
+                <div className="ct">
+                    <div className="cta-box" data-aos="zoom-in" data-aos-duration="1000">
+                        <h2 style={{ fontSize: "2rem", marginBottom: 16 }} className="fo">O próximo passo é simples.</h2>
+                        <p style={{ color: "var(--txm)", fontSize: "1.15rem", marginBottom: 8 }}>
+                            Ative o Cheffnex agora. Configure em minutos. Veja onde está perdendo dinheiro <strong style={{ color: "#fff" }}>ainda hoje</strong>.
+                        </p>
+                        <CountdownInline time={timeLeft} label="⏰ Esta oferta expira em:" />
+                        <div className="micro-g">
+                            <span><i data-lucide="shield-check" data-size="18" style={{ color: "var(--ok)" }} /> 7 dias grátis</span>
+                            <span><i data-lucide="credit-card" data-size="18" style={{ color: "var(--ok)" }} /> Cancele quando quiser</span>
+                            <span><i data-lucide="lock" data-size="18" style={{ color: "var(--ok)" }} /> Pagamento seguro</span>
+                        </div>
+                        <a href="https://wa.me/5500000000000" target="_blank" rel="noopener noreferrer" className="btn btn-cta" style={{ width: "100%", fontSize: "1.2rem", padding: 20 }}>
+                            👉 Quero eliminar o desperdício agora
+                        </a>
+                        <p style={{ marginTop: 16, color: "#555", fontSize: ".85rem" }}>Sem compromisso. Sem letras miúdas. Sem surpresas.</p>
+                    </div>
                 </div>
-                <a href="https://wa.me/5500000000000" target="_blank" rel="noopener noreferrer" className="btn btn-cta" style={{ width: "100%", fontSize: "1.2rem", padding: 20 }}>
-                    👉 Quero eliminar o desperdício agora
-                </a>
-                <p style={{ marginTop: 16, color: "#555", fontSize: ".85rem" }}>Sem compromisso. Sem letras miúdas. Sem surpresas.</p>
-            </div>
-        </div>
-            </section >
+            </section>
 
-    {/* FOOTER */ }
-    < footer className = "lp-ft" >
-        <div className="ct">
-            <div className="ft-grid">
-                <div className="f-col">
-                    <div className="logo-ic" style={{ marginBottom: 8 }}><i data-lucide="chef-hat" color="white" data-size="20" /></div>
-                    <h2 className="fo" style={{ fontSize: "1.5rem", color: "#fff" }}>Cheffnex</h2>
-                    <span style={{ maxWidth: 300 }}>Transformando desperdício invisível em controle real.</span>
+            {/* FOOTER */}
+            <footer className="lp-ft">
+                <div className="ct">
+                    <div className="ft-grid">
+                        <div className="f-col">
+                            <img src={logoFinal} alt="Cheffnex" className="logo-footer" />
+                            <span style={{ maxWidth: 300 }}>Transformando desperdício invisível em controle real.</span>
+                        </div>
+                        <div className="f-col" style={{ textAlign: "right" }}>
+                            <strong>Fale com Nosso Suporte</strong>
+                            <span>Hugo Avila 17 99257-3141</span>
+                            <span>Gmail Customapp01@gmail.com</span>
+                            <span>São Jose do Rio Preto - São Paulo/SP</span>
+                        </div>
+                    </div>
+                    <div className="f-bot">
+                        <span>© 2026 Cheffnex. Todos os direitos reservados.</span>
+                        <div style={{ display: "flex", gap: 24 }}>
+                            <a href="#">Termos de uso</a>
+                            <a href="#">Política de privacidade</a>
+                        </div>
+                    </div>
                 </div>
-                <div className="f-col" style={{ textAlign: "right" }}>
-                    <strong>Fale com Nosso Suporte</strong>
-                    <span>Hugo Avila 17 99257-3141</span>
-                    <span>Gmail Customapp01@gmail.com</span>
-                    <span>São Jose do Rio Preto - São Paulo/SP</span>
-                </div>
-            </div>
-            <div className="f-bot">
-                <span>© 2026 Cheffnex. Todos os direitos reservados.</span>
-                <div style={{ display: "flex", gap: 24 }}>
-                    <a href="#">Termos de uso</a>
-                    <a href="#">Política de privacidade</a>
-                </div>
-            </div>
+            </footer>
         </div>
-            </footer >
-        </div >
     );
 };
 

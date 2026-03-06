@@ -89,6 +89,26 @@
     justify-content: center
 }
 
+.logo-img {
+    height: 90px;
+    width: auto;
+    display: block;
+    object-fit: contain;
+    -webkit-mask-image: radial-gradient(ellipse at center, rgba(0, 0, 0, 1) 40%, rgba(0, 0, 0, 0) 75%);
+    mask-image: radial-gradient(ellipse at center, rgba(0, 0, 0, 1) 40%, rgba(0, 0, 0, 0) 75%);
+    transform: scale(1.2);
+}
+
+.logo-footer {
+    width: 280px;
+    height: auto;
+    display: block;
+    object-fit: contain;
+    -webkit-mask-image: radial-gradient(ellipse at center, rgba(0, 0, 0, 1) 30%, rgba(0, 0, 0, 0) 75%);
+    mask-image: radial-gradient(ellipse at center, rgba(0, 0, 0, 1) 30%, rgba(0, 0, 0, 0) 75%);
+    margin-left: -20px;
+}
+
 .btn-enter {
     background: var(--pr);
     color: #fff;

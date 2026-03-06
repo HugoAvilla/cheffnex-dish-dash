@@ -1,8 +1,10 @@
 import { ReactNode } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { LayoutDashboard, Package, ShoppingBag, ClipboardList, LogOut, List, Eye, Store, Paintbrush, BarChart2, DollarSign, Settings, BookTemplate } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
-import logoIcon from "@/assets/logo-icon.png";
+import { ThemeToggle } from "./ThemeToggle";
+import logoFinal from "@/assets/logo-final.png";
 
 const getNavItems = (restaurantId: string | null) => [
   { to: "/admin", icon: LayoutDashboard, label: "Dashboard" },
@@ -16,7 +18,7 @@ const getNavItems = (restaurantId: string | null) => [
   { to: "/admin/financeiro", icon: DollarSign, label: "Financeiro" },
   { to: "/admin/templates", icon: BookTemplate, label: "Templates" },
   { to: "/admin/settings", icon: Settings, label: "Configurações" },
-  { to: restaurantId ? `/menu/${restaurantId}` : "/", icon: Eye, label: "Ver Cardápio" },
+  { to: restaurantId ? `/ menu / ${restaurantId} ` : "/", icon: Eye, label: "Ver Cardápio" },
 ];
 
 export const AdminLayout = ({ children }: { children: ReactNode }) => {
@@ -34,9 +36,14 @@ export const AdminLayout = ({ children }: { children: ReactNode }) => {
     <div className="min-h-screen flex bg-background">
       {/* Sidebar */}
       <aside className="hidden md:flex md:w-60 bg-sidebar flex-col border-r border-sidebar-border">
-        <div className="flex items-center gap-2 px-5 py-5">
-          <img src={logoIcon} alt="" className="h-8 w-8" />
-          <span className="text-lg font-bold text-sidebar-primary">CheffNex</span>
+        <div
+          className="flex items-center justify-center -mx-4 -mt-2 mb-4 py-8"
+          style={{
+            WebkitMaskImage: 'radial-gradient(ellipse at center, rgba(0, 0, 0, 1) 30%, rgba(0, 0, 0, 0) 70%)',
+            maskImage: 'radial-gradient(ellipse at center, rgba(0, 0, 0, 1) 30%, rgba(0, 0, 0, 0) 70%)'
+          }}
+        >
+          <img src={logoFinal} alt="CheffNex" className="h-16 w-auto object-contain" />
         </div>
         <nav className="flex-1 px-3 space-y-1">
           {navItems.map((item) => {
@@ -45,10 +52,10 @@ export const AdminLayout = ({ children }: { children: ReactNode }) => {
               <NavLink
                 key={item.to}
                 to={item.to}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${active
+                className={`flex items - center gap - 3 px - 3 py - 2.5 rounded - lg text - sm font - medium transition - colors ${active
                   ? "bg-sidebar-accent text-sidebar-accent-foreground"
                   : "text-sidebar-foreground hover:bg-sidebar-accent/50"
-                  }`}
+                  } `}
               >
                 <item.icon className="h-5 w-5" />
                 {item.label}
@@ -56,7 +63,8 @@ export const AdminLayout = ({ children }: { children: ReactNode }) => {
             );
           })}
         </nav>
-        <div className="px-3 pb-4">
+        <div className="px-3 pb-4 space-y-1">
+          <ThemeToggle />
           <button onClick={handleLogout} className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-sidebar-foreground hover:bg-sidebar-accent/50 w-full">
             <LogOut className="h-5 w-5" />
             Sair
@@ -69,7 +77,7 @@ export const AdminLayout = ({ children }: { children: ReactNode }) => {
         {navItems.map((item) => {
           const active = location.pathname === item.to;
           return (
-            <NavLink key={item.to} to={item.to} className={`flex flex-col items-center gap-0.5 px-3 py-1 text-xs ${active ? "text-accent" : "text-muted-foreground"}`}>
+            <NavLink key={item.to} to={item.to} className={`flex flex - col items - center gap - 0.5 px - 3 py - 1 text - xs ${active ? "text-accent" : "text-muted-foreground"} `}>
               <item.icon className="h-5 w-5" />
               {item.label}
             </NavLink>

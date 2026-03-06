@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import logoText from "@/assets/logo-text.png";
+import logoFinal from "@/assets/logo-final.png";
 import loginHero from "@/assets/login-hero.jpg";
 
 const ForgotPassword = () => {
@@ -47,7 +47,15 @@ const ForgotPassword = () => {
             <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-background">
                 <div className="w-full max-w-sm space-y-8">
                     <div className="flex flex-col items-center">
-                        <img src={logoText} alt="CheffNex" className="h-16 mb-6" />
+                        <div
+                            className="flex items-center justify-center px-16 py-12 mb-2 w-full"
+                            style={{
+                                WebkitMaskImage: 'radial-gradient(ellipse at center, rgba(0, 0, 0, 1) 30%, rgba(0, 0, 0, 0) 70%)',
+                                maskImage: 'radial-gradient(ellipse at center, rgba(0, 0, 0, 1) 30%, rgba(0, 0, 0, 0) 70%)'
+                            }}
+                        >
+                            <img src={logoFinal} alt="CheffNex" className="h-32 w-auto object-contain" />
+                        </div>
                         <h1 className="text-2xl font-bold text-foreground">Esqueceu sua senha?</h1>
                         <p className="text-muted-foreground mt-1 text-center">
                             {sent
