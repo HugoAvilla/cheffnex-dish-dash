@@ -36,12 +36,14 @@ export const AdminLayout = ({ children }: { children: ReactNode }) => {
       {/* Sidebar Desktop */}
       <aside className="hidden md:flex md:w-64 bg-card/40 backdrop-blur-md flex-col border-r border-border shadow-sm transition-all h-full">
         <div className="flex items-center justify-center pt-8 pb-6 px-4 w-full">
-          <div className="rounded-2xl overflow-hidden shadow-lg ring-1 ring-border/20 flex items-center justify-center w-fit">
-            <img src={logoFinal} alt="CheffNex" className="h-14 sm:h-16 w-auto object-cover drop-shadow-md" />
-          </div>
+          <img
+            src={logoFinal}
+            alt="CheffNex"
+            className="h-14 sm:h-16 w-auto object-cover rounded-[1.5rem] shadow-lg ring-1 ring-border/20"
+          />
         </div>
 
-        <nav className="flex-1 px-4 py-2 space-y-1.5 overflow-y-auto scrollbar-hide">
+        <nav className="flex-1 px-4 py-2 space-y-1.5 overflow-y-auto">
           <p className="px-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60 mb-2">Menu Principal</p>
           {navItems.map((item) => {
             const active = location.pathname === item.to;
