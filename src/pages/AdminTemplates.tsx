@@ -3,7 +3,7 @@ import { AdminLayout } from "@/components/admin/AdminLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
-import { Check, ChevronLeft, ChevronRight, Plus, Trash2, Edit3, Save, X, Sparkles } from "lucide-react";
+import { Check, ChevronLeft, ChevronRight, Plus, Trash2, Edit3, Save, X, Sparkles, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { menuTemplates, type MenuTemplate, type TemplateProduct, type TemplateExtra } from "@/data/menuTemplates";
@@ -25,6 +25,8 @@ interface EditableProduct extends TemplateProduct {
     _removed?: boolean;
     recipe?: EditableRecipeItem[];
     editedExtras?: EditableExtra[];
+    imageFile?: File;
+    imagePreview?: string;
 }
 
 interface SelectedTemplate extends MenuTemplate {
@@ -63,6 +65,15 @@ const AdminTemplates = () => {
         },
         enabled: !!restaurantId,
     });
+
+    const uploadImage = async (file: File): Promise<string> => {
+        const ext = file.name.split(".").pop();
+        const path = `${restaurantId}/${crypto.randomUUID()}.${ext}`;
+        const { error } = await supabase.storage.from("menu-images").upload(path, file);
+        if (error) throw error;
+        const { data } = supabase.storage.from("menu-images").getPublicUrl(path);
+        return data.publicUrl;
+    };
 
     // Move to step 2
     const goToStep2 = () => {
@@ -148,13 +159,18 @@ const AdminTemplates = () => {
 
                 // Create products one by one to use their IDs for recipes and extras
                 for (const p of validProducts) {
+                    let finalImageUrl = null;
+                    if (p.imageFile) {
+                        finalImageUrl = await uploadImage(p.imageFile);
+                    }
+
                     const { data: prodData, error: prodError } = await supabase
                         .from("products")
                         .insert({
                             name: p.name,
                             description: p.description,
                             sell_price: p.price,
-                            image_url: p.image_url,
+                            image_url: finalImageUrl,
                             category: template.name,
                             category_id: categoryId,
                             restaurant_id: restaurantId,
@@ -393,6 +409,45 @@ const AdminTemplates = () => {
                                                             />
                                                         </div>
 
+                                                        <div className="pt-3 border-t border-border mt-3">
+                                                            <label className="text-xs font-bold text-foreground mb-2 block">Foto do Produto</label>
+                                                            <input
+                                                                type="file"
+                                                                accept="image/*"
+                                                                id={`file-${template.id}-${idx}`}
+                                                                className="hidden"
+                                                                onChange={(e) => {
+                                                                    const file = e.target.files?.[0];
+                                                                    if (file) {
+                                                                        updateProduct(template.id, idx, "imageFile", file);
+                                                                        updateProduct(template.id, idx, "imagePreview", URL.createObjectURL(file));
+                                                                    }
+                                                                }}
+                                                            />
+                                                            {product.imagePreview ? (
+                                                                <div className="relative inline-block">
+                                                                    <img src={product.imagePreview} alt="" className="h-32 w-32 rounded-xl object-cover border border-border" />
+                                                                    <button
+                                                                        onClick={() => {
+                                                                            updateProduct(template.id, idx, "imageFile", undefined);
+                                                                            updateProduct(template.id, idx, "imagePreview", undefined);
+                                                                        }}
+                                                                        className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-1 shadow-md hover:bg-destructive/90 transition-colors"
+                                                                    >
+                                                                        <X className="h-3 w-3" />
+                                                                    </button>
+                                                                </div>
+                                                            ) : (
+                                                                <label
+                                                                    htmlFor={`file-${template.id}-${idx}`}
+                                                                    className="border-2 border-dashed border-border rounded-xl p-5 w-full flex flex-col items-center justify-center text-center text-muted-foreground hover:border-primary hover:bg-primary/5 transition-colors cursor-pointer"
+                                                                >
+                                                                    <Upload className="h-5 w-5 mb-2" />
+                                                                    <span className="text-xs font-medium">Tirar foto na câmera ou galeria</span>
+                                                                </label>
+                                                            )}
+                                                        </div>
+
                                                         {/* Recipe Mapping */}
                                                         <div className="pt-3 border-t border-border mt-3">
                                                             <div className="flex items-center gap-2 mb-2">
@@ -537,6 +592,9 @@ const AdminTemplates = () => {
                                                 ) : (
                                                     /* View mode */
                                                     <div className="flex items-center justify-between gap-4">
+                                                        {product.imagePreview && (
+                                                            <img src={product.imagePreview} alt="" className="h-10 w-10 rounded-lg object-cover shrink-0 border border-border" />
+                                                        )}
                                                         <div className="flex-1 min-w-0">
                                                             <div className="flex items-center gap-2">
                                                                 <h4 className="font-semibold text-foreground text-sm truncate">{product.name}</h4>
