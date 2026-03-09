@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
+import { HelpTutorialModal } from "@/components/admin/HelpTutorialModal";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
@@ -165,6 +166,15 @@ const Dashboard = () => {
 
   return (
     <AdminLayout>
+      <HelpTutorialModal
+        tutorialKey="admin_dashboard"
+        title="Dashboard"
+        steps={[
+          { title: "Bem-vindo ao Dashboard!", description: "Aqui você tem uma visão geral do seu restaurante, incluindo métricas importantes de pedidos, estoque e faturamento." },
+          { title: "Métricas Rápidas", description: "Os cartões no topo mostram o total de pedidos do dia atual, valor em estoque e alertas críticos (sem estoque ou próximo do vencimento)." },
+          { title: "Estoque Detalhado", description: "Mais abaixo, você acompanha as tabelas detalhadas com os insumos que requerem atenção imediata." }
+        ]}
+      />
       <div className="p-4 md:p-6 max-w-6xl mx-auto space-y-6">
         {/* Greeting */}
         <div>

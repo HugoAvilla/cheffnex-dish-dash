@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { AdminLayout } from "@/components/admin/AdminLayout";
+import { HelpTutorialModal } from "@/components/admin/HelpTutorialModal";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -223,6 +224,15 @@ const Financeiro = () => {
 
   return (
     <AdminLayout>
+      <HelpTutorialModal
+        tutorialKey="admin_financeiro"
+        title="Financeiro"
+        steps={[
+          { title: "Resumo Financeiro", description: "Acompanhe todo o faturamento, custos totais (CMV + despesas extras) e seu Lucro Líquido no mês atual." },
+          { title: "Gráficos", description: "Analise a evolução de faturamento e custos ao longo dos últimos 7 dias no gráfico central." },
+          { title: "Despesas Manuais", description: "Use 'Registrar Despesa' para adicionar custos que não vêm diretamente das compras de insumos, como luz, água e salários." }
+        ]}
+      />
       <div className="space-y-6 p-4 md:p-6">
 
         {/* Header */}

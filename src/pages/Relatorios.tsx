@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AdminLayout } from "@/components/admin/AdminLayout";
+import { HelpTutorialModal } from "@/components/admin/HelpTutorialModal";
 import { ReportConfigModal } from "@/components/relatorios/ReportConfigModal";
 
 export interface ReportType {
@@ -64,6 +65,15 @@ const Relatorios = () => {
 
   return (
     <AdminLayout>
+      <HelpTutorialModal
+        tutorialKey="admin_relatorios"
+        title="Relatórios"
+        steps={[
+          { title: "Geração de Relatórios", description: "Escolha o tipo de relatório que deseja gerar: Pedidos, Financeiro, Estoque ou Cardápio." },
+          { title: "Filtros e Configurações", description: "Ao clicar em um relatório, você poderá filtrar por datas e configurar o nível de detalhamento." },
+          { title: "Download", description: "Todos os relatórios são gerados no formato PDF, otimizados para leitura ou impressão." }
+        ]}
+      />
       <div className="space-y-6 p-4 md:p-6">
         <div>
           <h1 className="text-2xl font-bold">Relatórios</h1>

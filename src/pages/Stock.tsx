@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
+import { HelpTutorialModal } from "@/components/admin/HelpTutorialModal";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -267,6 +268,15 @@ const Stock = () => {
 
   return (
     <AdminLayout>
+      <HelpTutorialModal
+        tutorialKey="admin_stock"
+        title="Estoque"
+        steps={[
+          { title: "Controle de Insumos", description: "Aqui você gerencia todos os ingredientes do seu restaurante. Mantenha as quantidades sempre atualizadas." },
+          { title: "Alertas Automáticos", description: "O sistema avisa automaticamente sobre produtos com estoque baixo ou próximos do vencimento." },
+          { title: "Categorização", description: "Use as abas para alternar entre Itens individuais e visão consolidada por Categorias." }
+        ]}
+      />
       <div className="p-4 md:p-6 max-w-6xl mx-auto space-y-6">
         <h1 className="text-2xl font-bold text-foreground">Controle de Estoque</h1>
 

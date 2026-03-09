@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
+import { HelpTutorialModal } from "@/components/admin/HelpTutorialModal";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -220,6 +221,15 @@ const AdminRestaurant = () => {
 
   return (
     <AdminLayout>
+      <HelpTutorialModal
+        tutorialKey="admin_restaurant"
+        title="Configurações do Restaurante"
+        steps={[
+          { title: "Informações", description: "Aqui você define o CPF/CNPJ ou dados cadastrais do seu negócio." },
+          { title: "Equipe", description: "Gerencie os membros da sua equipe de garçons e caixas. Cada membro terá login com senha para acessar as comandas, sem ter acesso à visão administrativa." },
+          { title: "Divulgar Cardápio", description: "Copie o link do seu cardápio digital ou baixe o QR Code para colocar nas mesas." }
+        ]}
+      />
       <div className="p-4 md:p-6 max-w-3xl mx-auto space-y-6">
         <div className="flex items-center gap-3">
           <Store className="h-6 w-6 text-primary" />

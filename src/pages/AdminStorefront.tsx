@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
+import { HelpTutorialModal } from "@/components/admin/HelpTutorialModal";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -140,6 +141,15 @@ const AdminStorefront = () => {
 
   return (
     <AdminLayout>
+      <HelpTutorialModal
+        tutorialKey="admin_storefront"
+        title="Loja / Loja Digital"
+        steps={[
+          { title: "Status da Loja", description: "Use este interruptor para abrir ou fechar sua loja temporariamente (ex: pausa para o almoço). Clientes não conseguem pedir com a loja fechada." },
+          { title: "Personalização de Visual", description: "Faça upload da sua Logo e de um Banner. Defina também a cor principal que pintará seus botões e cabeçalhos no cardápio de clientes." },
+          { title: "Informações Básicas", description: "Atualize o nome, contato, horários de funcionamento e informe promoções rápidas no banner de novidades." }
+        ]}
+      />
       <div className="p-4 md:p-6">
         <h1 className="text-2xl font-bold text-foreground mb-6">Personalizar Cardápio</h1>
 

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
+import { HelpTutorialModal } from "@/components/admin/HelpTutorialModal";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -186,6 +187,15 @@ const AdminCategories = () => {
 
   return (
     <AdminLayout>
+      <HelpTutorialModal
+        tutorialKey="admin_categories"
+        title="Categorias"
+        steps={[
+          { title: "Organize seu Cardápio", description: "As categorias ajudam a agrupar seus produtos (ex: Lanches, Bebidas, Sobremesas). A ordem de exibição define como elas aparecem para o cliente." },
+          { title: "Venda Cruzada (Cross-sell)", description: "Utilize o botão Cross-sell para criar regras automáticas de sugestão. Ex: Quando o cliente pedir 'Lanches', o sistema sugere 'Bebidas'." },
+          { title: "Acompanhamento Visual", description: "Veja ao lado de cada categoria a quantidade de itens vinculados a ela." }
+        ]}
+      />
       <div className="p-6 max-w-2xl mx-auto space-y-6">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold text-foreground">Categorias</h1>
