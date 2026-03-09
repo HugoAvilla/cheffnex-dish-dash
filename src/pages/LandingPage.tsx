@@ -385,7 +385,7 @@ const LandingPage = () => {
                                     <li key={i}><span className="ck">✓</span><span><strong>{f.split(" ")[0]} {f.split(" ")[1]}</strong> {f.split(" ").slice(2).join(" ")}</span></li>
                                 ))}
                             </ul>
-                            <a href="https://wa.me/5500000000000" target="_blank" rel="noopener noreferrer" className="btn btn-s" style={{ width: "100%", marginTop: 16 }}>
+                            <a href="https://checkout.nexano.com.br/checkout/cmme0xban0vzf1rntfdxy1vig?offer=4GCKM6A" target="_blank" rel="noopener noreferrer" className="btn btn-s" style={{ width: "100%", marginTop: 16 }}>
                                 Começar agora
                             </a>
                         </div>
@@ -404,7 +404,7 @@ const LandingPage = () => {
                                     <li key={i}><span className="ck">✓</span><span><strong>{f.split(" ")[0]} {f.split(" ")[1]}</strong> {f.split(" ").slice(2).join(" ")}</span></li>
                                 ))}
                             </ul>
-                            <a href="https://wa.me/5500000000000" target="_blank" rel="noopener noreferrer" className="btn btn-cta" style={{ width: "100%", marginTop: 16 }}>
+                            <a href="https://checkout.nexano.com.br/checkout/cmme0xban0vzf1rntfdxy1vig?offer=OGF2EE5" target="_blank" rel="noopener noreferrer" className="btn btn-cta" style={{ width: "100%", marginTop: 16 }}>
                                 👉 Quero eliminar o desperdício
                             </a>
                         </div>
@@ -448,7 +448,7 @@ const LandingPage = () => {
                             <span><i data-lucide="credit-card" data-size="18" style={{ color: "var(--ok)" }} /> Cancele quando quiser</span>
                             <span><i data-lucide="lock" data-size="18" style={{ color: "var(--ok)" }} /> Pagamento seguro</span>
                         </div>
-                        <a href="https://wa.me/5500000000000" target="_blank" rel="noopener noreferrer" className="btn btn-cta" style={{ width: "100%", fontSize: "1.2rem", padding: 20 }}>
+                        <a href="https://checkout.nexano.com.br/checkout/cmme0xban0vzf1rntfdxy1vig?offer=OGF2EE5" target="_blank" rel="noopener noreferrer" className="btn btn-cta" style={{ width: "100%", fontSize: "1.2rem", padding: 20 }}>
                             👉 Quero eliminar o desperdício agora
                         </a>
                         <p style={{ marginTop: 16, color: "#555", fontSize: ".85rem" }}>Sem compromisso. Sem letras miúdas. Sem surpresas.</p>
