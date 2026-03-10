@@ -17,6 +17,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { format, addDays, isAfter, isBefore } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 const DEFAULT_CATEGORIES = ["Laticínios", "Proteínas", "Carboidratos", "Verduras/Legumes", "Temperos", "Bebidas", "Embalagens", "Outros"];
 
@@ -31,6 +33,7 @@ type Ingredient = {
   restaurant_id: string;
   created_at: string;
   category: string;
+  last_stock_quantity: number;
 };
 
 type NewItemForm = {
@@ -139,6 +142,45 @@ const Stock = () => {
     return items.filter(i => i.name.toLowerCase().includes(search.toLowerCase()));
   }, [items, search]);
 
+  const shoppingListItems = useMemo(() => {
+    return items.filter(i => {
+      // 10% above min stock
+      return i.current_stock <= i.min_stock * 1.1;
+    }).sort((a, b) => {
+      const catA = a.category || "Outros";
+      const catB = b.category || "Outros";
+      if (catA === catB) return a.name.localeCompare(b.name);
+      return catA.localeCompare(catB);
+    });
+  }, [items]);
+
+  const exportShoppingListPDF = () => {
+    const doc = new jsPDF();
+    doc.text("Lista de Compras", 14, 20);
+
+    // Header for PDF
+    doc.setFontSize(10);
+    doc.text(`Gerado em: ${format(new Date(), "dd/MM/yyyy HH:mm", { locale: ptBR })}`, 14, 28);
+
+    autoTable(doc, {
+      startY: 35,
+      head: [['Nome', 'Categoria', 'Estoque', 'Mínimo', 'Gasto', 'Unidade']],
+      body: shoppingListItems.map(item => [
+        item.name,
+        item.category || "Outros",
+        String(item.current_stock),
+        String(item.min_stock),
+        String(Math.max(0, item.last_stock_quantity - item.current_stock)),
+        item.unit
+      ]),
+      theme: 'grid',
+      styles: { fontSize: 9 },
+      headStyles: { fillColor: [66, 66, 66] }
+    });
+
+    doc.save("lista_compras.pdf");
+  };
+
   const grouped = useMemo(() => {
     const groups: Record<string, Ingredient[]> = {};
     for (const item of filtered) {
@@ -176,9 +218,13 @@ const Stock = () => {
         expiration_date: form.expiration_date || null,
       };
       if (editingItem) {
+        if (form.current_stock !== editingItem.current_stock) {
+          payload.last_stock_quantity = form.current_stock;
+        }
         const { error } = await supabase.from("ingredients").update(payload).eq("id", editingItem.id);
         if (error) throw error;
       } else {
+        payload.last_stock_quantity = form.current_stock;
         const { error } = await supabase.from("ingredients").insert({ ...payload, restaurant_id: restaurantId });
         if (error) throw error;
       }
@@ -330,6 +376,7 @@ const Stock = () => {
             <TabsList>
               <TabsTrigger value="items">Itens</TabsTrigger>
               <TabsTrigger value="categories">Categorias</TabsTrigger>
+              <TabsTrigger value="shopping-list">Lista de Compras</TabsTrigger>
             </TabsList>
           </div>
 
@@ -481,6 +528,57 @@ const Stock = () => {
                         </TableRow>
                       );
                     })}
+                  </TableBody>
+                </Table>
+              </div>
+            </Card>
+          </TabsContent>
+
+          {/* SHOPPING LIST TAB */}
+          <TabsContent value="shopping-list" className="space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <p className="text-sm text-muted-foreground">
+                Itens que atingiram o limite de estoque baixo ou estão 10% próximos de atingir.
+              </p>
+              <Button onClick={exportShoppingListPDF} variant="outline">
+                Baixar PDF da Lista
+              </Button>
+            </div>
+            <Card>
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-muted/50">
+                      <TableHead>Nome</TableHead>
+                      <TableHead>Categoria</TableHead>
+                      <TableHead className="text-center">Estoque Atual</TableHead>
+                      <TableHead className="text-center">Estoque Mín.</TableHead>
+                      <TableHead className="text-center">Qtd. Gasta</TableHead>
+                      <TableHead className="text-center">Unidade</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {shoppingListItems.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                          Nenhum item precisa ser comprado no momento.
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      shoppingListItems.map((item) => {
+                        const spent = Math.max(0, item.last_stock_quantity - item.current_stock);
+                        return (
+                          <TableRow key={item.id} className="bg-red-50/30 dark:bg-red-950/20">
+                            <TableCell className="font-medium">{item.name}</TableCell>
+                            <TableCell>{item.category || "Outros"}</TableCell>
+                            <TableCell className="text-center font-mono text-destructive">{Number(item.current_stock)}</TableCell>
+                            <TableCell className="text-center font-mono">{Number(item.min_stock)}</TableCell>
+                            <TableCell className="text-center font-mono font-bold">{spent}</TableCell>
+                            <TableCell className="text-center text-muted-foreground">{item.unit}</TableCell>
+                          </TableRow>
+                        );
+                      })
+                    )}
                   </TableBody>
                 </Table>
               </div>
