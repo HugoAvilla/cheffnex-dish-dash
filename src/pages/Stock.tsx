@@ -27,7 +27,6 @@ type Ingredient = {
   current_stock: number;
   min_stock: number;
   cost_price: number;
-  unit_value: number | null;
   expiration_date: string | null;
   restaurant_id: string;
   created_at: string;
@@ -41,11 +40,10 @@ type NewItemForm = {
   min_stock: number;
   current_stock: number;
   cost_price: number;
-  unit_value: string;
   expiration_date: string;
 };
 
-const emptyForm: NewItemForm = { name: "", category: "Outros", unit: "UN", min_stock: 0, current_stock: 0, cost_price: 0, unit_value: "", expiration_date: "" };
+const emptyForm: NewItemForm = { name: "", category: "Outros", unit: "UN", min_stock: 0, current_stock: 0, cost_price: 0, expiration_date: "" };
 
 function getStatus(item: Ingredient, thresholdPercent: number): "out" | "low" | "normal" {
   if (item.current_stock === 0) return "out";
@@ -175,7 +173,6 @@ const Stock = () => {
         min_stock: form.min_stock,
         current_stock: form.current_stock,
         cost_price: form.cost_price,
-        unit_value: form.unit_value ? Number(form.unit_value) : null,
         expiration_date: form.expiration_date || null,
       };
       if (editingItem) {
@@ -242,7 +239,6 @@ const Stock = () => {
       min_stock: item.min_stock,
       current_stock: item.current_stock,
       cost_price: item.cost_price,
-      unit_value: item.unit_value != null ? String(item.unit_value) : "",
       expiration_date: item.expiration_date || "",
     });
     setModalOpen(true);
@@ -374,7 +370,6 @@ const Stock = () => {
                           <TableHead className="text-center">Estoque Atual</TableHead>
                           <TableHead className="text-center">Estoque Mín.</TableHead>
                           <TableHead className="text-center">Unidade</TableHead>
-                          <TableHead className="text-center">Valor Un. (R$)</TableHead>
                           <TableHead className="text-center">Status</TableHead>
                           <TableHead>Validade</TableHead>
                           <TableHead className="w-[80px]"></TableHead>
@@ -390,9 +385,6 @@ const Stock = () => {
                               <TableCell className="text-center font-mono">{Number(item.current_stock)}</TableCell>
                               <TableCell className="text-center font-mono">{Number(item.min_stock)}</TableCell>
                               <TableCell className="text-center text-muted-foreground">{item.unit}</TableCell>
-                              <TableCell className="text-center font-mono">
-                                {item.unit_value != null ? `R$ ${Number(item.unit_value).toFixed(2)}` : <span className="text-muted-foreground text-xs">—</span>}
-                              </TableCell>
                               <TableCell className="text-center">
                                 <StatusBadge status={status} />
                               </TableCell>
@@ -533,7 +525,13 @@ const Stock = () => {
                   </Select>
                 </div>
                 <div className="grid gap-2">
-                  <Label>Custo Unitário (R$)</Label>
+                  <Label>
+                    {form.unit === 'KG' ? 'Custo por KG (R$)' :
+                      form.unit === 'L' ? 'Custo por Litro (R$)' :
+                        form.unit === 'G' ? 'Custo por Grama (R$)' :
+                          form.unit === 'ML' ? 'Custo por Mililitro (R$)' :
+                            'Custo por Unidade (R$)'}
+                  </Label>
                   <Input type="number" step="0.01" value={form.cost_price} onChange={(e) => setForm({ ...form, cost_price: Number(e.target.value) })} />
                 </div>
               </div>
@@ -546,18 +544,6 @@ const Stock = () => {
                   <Label>Estoque Atual</Label>
                   <Input type="number" value={form.current_stock} onChange={(e) => setForm({ ...form, current_stock: Number(e.target.value) })} />
                 </div>
-              </div>
-              <div className="grid gap-2">
-                <Label>Valor Unidade - R$ (opcional)</Label>
-                <p className="text-xs text-muted-foreground">Valor monetário por unidade para cálculo do valor total em estoque.</p>
-                <Input
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={form.unit_value}
-                  onChange={(e) => setForm({ ...form, unit_value: e.target.value })}
-                  placeholder="Ex: 12.50"
-                />
               </div>
               <div className="grid gap-2">
                 <Label>Data de Vencimento (opcional)</Label>

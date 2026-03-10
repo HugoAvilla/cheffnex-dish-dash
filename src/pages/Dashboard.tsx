@@ -135,8 +135,8 @@ const Dashboard = () => {
       return isAfter(exp, now) && isBefore(exp, alertDate);
     }).length,
     stockValue: ingredients.reduce((sum, i) => {
-      if (i.unit_value != null && i.unit_value > 0) {
-        return sum + (Number(i.unit_value) * Number(i.current_stock));
+      if (i.cost_price != null && i.cost_price > 0) {
+        return sum + (Number(i.cost_price) * Number(i.current_stock));
       }
       return sum;
     }, 0),
