@@ -223,10 +223,31 @@ const Stock = () => {
         }
         const { error } = await supabase.from("ingredients").update(payload).eq("id", editingItem.id);
         if (error) throw error;
+
+        if (form.current_stock > editingItem.current_stock) {
+          const addedStock = form.current_stock - editingItem.current_stock;
+          await supabase.from("stock_entries").insert({
+            ingredient_id: editingItem.id,
+            restaurant_id: restaurantId,
+            quantity: addedStock,
+            cost_price: form.cost_price,
+            notes: "Adicionado via edição de estoque",
+          });
+        }
       } else {
         payload.last_stock_quantity = form.current_stock;
-        const { error } = await supabase.from("ingredients").insert({ ...payload, restaurant_id: restaurantId });
+        const { data, error } = await supabase.from("ingredients").insert({ ...payload, restaurant_id: restaurantId }).select("id").single();
         if (error) throw error;
+
+        if (form.current_stock > 0) {
+          await supabase.from("stock_entries").insert({
+            ingredient_id: data.id,
+            restaurant_id: restaurantId,
+            quantity: form.current_stock,
+            cost_price: form.cost_price,
+            notes: "Estoque inicial",
+          });
+        }
       }
     },
     onSuccess: () => {
