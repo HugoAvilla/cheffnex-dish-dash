@@ -1,13 +1,14 @@
-import { useMemo } from "react";
+import { useMemo, useEffect, useState } from "react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { HelpTutorialModal } from "@/components/admin/HelpTutorialModal";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
-import { Package, AlertTriangle, XCircle, Clock, ShoppingBag, ClipboardList, DollarSign } from "lucide-react";
+import { Package, AlertTriangle, XCircle, Clock, ShoppingBag, ClipboardList, DollarSign, AlertCircle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { addDays, isAfter, isBefore } from "date-fns";
+import { addDays, isAfter, isBefore, differenceInDays } from "date-fns";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 type Ingredient = {
   id: string;
@@ -29,6 +30,18 @@ function getGreeting(): string {
 
 const Dashboard = () => {
   const { restaurantId } = useAuth();
+  const [userMetadata, setUserMetadata] = useState<any>(null);
+
+  // Load user session metadata for payment status
+  useEffect(() => {
+    const fetchSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user?.user_metadata) {
+        setUserMetadata(session.user.user_metadata);
+      }
+    };
+    fetchSession();
+  }, []);
 
   const { data: profile } = useQuery({
     queryKey: ["profile"],
@@ -164,6 +177,57 @@ const Dashboard = () => {
     { label: "Próx. Vencimento", value: metrics.nearExpiry, icon: Clock, bgClass: "bg-[hsl(var(--warning))]/10", iconClass: "text-[hsl(var(--warning))]", valueClass: "text-foreground", isMonetary: false },
   ];
 
+  // Payment Warning Logic
+  const getPaymentWarning = () => {
+    if (!userMetadata) return null;
+
+    const status = userMetadata.status;
+    const declinedAt = userMetadata.payment_declined_at;
+
+    if (status === "payment_declined" && declinedAt) {
+      const declineDate = new Date(declinedAt);
+      const deadlineDate = addDays(declineDate, 5);
+      const daysLeft = differenceInDays(deadlineDate, now);
+
+      if (daysLeft > 0) {
+        return (
+          <Alert variant="default" className="bg-yellow-500/10 border-yellow-500/50 text-yellow-700 dark:text-yellow-400 mb-6">
+            <AlertTriangle className="h-5 w-5 !text-yellow-600 dark:!text-yellow-500" />
+            <AlertTitle className="text-lg font-semibold">Aviso de Pagamento Pendente</AlertTitle>
+            <AlertDescription>
+              Identificamos uma falha no seu último pagamento. Você tem <strong>{daysLeft} {daysLeft === 1 ? 'dia' : 'dias'}</strong> para regularizar sua assinatura antes do bloqueio da plataforma.
+            </AlertDescription>
+          </Alert>
+        );
+      } else {
+        return (
+          <Alert variant="destructive" className="mb-6">
+            <AlertCircle className="h-5 w-5" />
+            <AlertTitle className="text-lg font-semibold">Assinatura Suspensa</AlertTitle>
+            <AlertDescription>
+              O prazo de 5 dias para regularização do pagamento expirou. Sua assinatura encontra-se com restrições. Por favor, regularize o pagamento imediatamente.
+            </AlertDescription>
+          </Alert>
+        );
+      }
+    }
+
+    // Fallback if somehow just marked as blocked strictly
+    if (status === "blocked") {
+      return (
+        <Alert variant="destructive" className="mb-6">
+          <AlertCircle className="h-5 w-5" />
+          <AlertTitle className="text-lg font-semibold">Acesso Restrito</AlertTitle>
+          <AlertDescription>
+            Sua conta encontra-se bloqueada. Por favor, entre em contato ou regularize pendências imediatamente.
+          </AlertDescription>
+        </Alert>
+      );
+    }
+
+    return null;
+  };
+
   return (
     <AdminLayout>
       <HelpTutorialModal
@@ -176,6 +240,9 @@ const Dashboard = () => {
         ]}
       />
       <div className="p-4 md:p-6 max-w-6xl mx-auto space-y-6">
+
+        {getPaymentWarning()}
+
         {/* Greeting */}
         <div>
           <h1 className="text-2xl font-bold text-foreground">{getGreeting()}, {userName}!</h1>

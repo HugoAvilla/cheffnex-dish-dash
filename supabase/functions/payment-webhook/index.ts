@@ -128,8 +128,6 @@ Deno.serve(async (req: Request) => {
         });
 
         if (createError) {
-            // Garantir Idempotência: Se o usuário já existe, não deve duplicar. 
-            // Supabase já impede duplicação de e-mail e retorna erro específico
             const errorStr = createError.message.toLowerCase();
             if (
                 errorStr.includes("already registered") ||
@@ -137,9 +135,33 @@ Deno.serve(async (req: Request) => {
                 errorStr.includes("já está registrado") ||
                 errorStr.includes("unique")
             ) {
-                console.log(`Evento ignorado por idempotência: usuário ${email} já existe.`);
+                console.log(`Usuário ${email} já existe. Tentando restaurar acesso caso possua pendências.`);
+
+                // Buscar o usuário existente para reativar
+                const { data: userId, error: rpcError } = await adminClient.rpc('get_user_id_by_email_or_document', {
+                    p_email: email,
+                    p_document: documentStr
+                });
+
+                if (userId) {
+                    const { data: userCurrentData } = await adminClient.auth.admin.getUserById(userId);
+                    const currentMetadata = userCurrentData?.user?.user_metadata || {};
+
+                    // Remover marcadores de bloqueio ou declínio
+                    const { payment_declined_at, status, blocked, ...cleanMetadata } = currentMetadata;
+
+                    await adminClient.auth.admin.updateUserById(userId, {
+                        user_metadata: {
+                            ...cleanMetadata,
+                            status: "active"
+                        },
+                        ban_duration: 'none' // Remove qualquer ban físico
+                    });
+                    console.log(`Acesso e metadados do usuário ${userId} restaurados pelo webhook.`);
+                }
+
                 return new Response(
-                    JSON.stringify({ success: true, message: "Usuário já existe. Evento processado (idempotência)." }),
+                    JSON.stringify({ success: true, message: "Usuário já existia. Conta reativada/Evento processado (idempotência)." }),
                     { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
                 );
             }
@@ -155,11 +177,11 @@ Deno.serve(async (req: Request) => {
         // (Opcional: dependendo de como o projeto gerencia planos, por ex)
         const userId = newUser.user.id;
         await adminClient.from("user_roles").insert({ user_id: userId, role: "OWNER" }).select().single()
-            .catch(e => console.log("Role assignment ignorable error or not existing table", e));
+            .catch((e: any) => console.log("Role assignment ignorable error or not existing table", e));
 
         // Também podemos inserir no `profiles` se a trigger demorar ou falhar, mas deixaremos a cargo do projeto base
         await adminClient.from("profiles").upsert({ id: userId, full_name: name, document: documentStr }).select().single()
-            .catch(e => console.log("Profile upsert ignorable error", e));
+            .catch((e: any) => console.log("Profile upsert ignorable error", e));
 
         console.log(`Usuário gerado com sucesso pelo Webhook. ID: ${userId}, Email: ${email}`);
 

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { Info } from "lucide-react";
 import loginHero from "@/assets/login-hero.jpg";
 import logoFinal from "@/assets/logo-final.png";
 
@@ -50,6 +51,13 @@ const AdminLogin = () => {
           </div>
 
           <form onSubmit={handleLogin} className="space-y-4">
+            <div className="bg-[#fcf7ed] border border-[#f5ead5] rounded-xl p-4 flex gap-3 text-sm text-[#4b453e] mb-4">
+              <Info className="w-5 h-5 text-[#8c847a] shrink-0 mt-0.5" />
+              <p>
+                <strong>Primeiro acesso?</strong> Use o email e o número de documento (CPF ou CNPJ) utilizado na compra como senha.
+              </p>
+            </div>
+
             <div>
               <label className="text-sm font-medium text-foreground mb-1.5 block">E-mail</label>
               <input
