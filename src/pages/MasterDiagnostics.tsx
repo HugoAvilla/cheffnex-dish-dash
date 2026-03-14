@@ -5,7 +5,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Loader2, Download, ShieldAlert, Trash2, FileDown } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Loader2, Download, ShieldAlert, Trash2, FileDown, Eye } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/components/ui/use-toast";
 
@@ -14,6 +16,8 @@ const MASTER_DEV_EMAIL = "hg.lavila@gmail.com";
 interface DiagnosticRow {
     id: string;
     user_id: string;
+    nome_pagamento: string | null;
+    email_pagamento: string | null;
     idade: string;
     genero: string;
     cidade_estado_pais: string;
@@ -34,9 +38,6 @@ interface DiagnosticRow {
     ferramenta_desejada: string;
     bonus_resgatado: boolean;
     created_at: string;
-    profiles?: {
-        full_name: string | null;
-    } | null;
 }
 
 export default function MasterDiagnostics() {
@@ -45,6 +46,7 @@ export default function MasterDiagnostics() {
     const queryClient = useQueryClient();
     const [isExporting, setIsExporting] = useState(false);
     const [deletingId, setDeletingId] = useState<string | null>(null);
+    const [viewingRow, setViewingRow] = useState<DiagnosticRow | null>(null);
 
     // Security layer at component level
     if (!authLoading && user?.email?.toLowerCase() !== MASTER_DEV_EMAIL) {
@@ -55,12 +57,9 @@ export default function MasterDiagnostics() {
         queryKey: ["master-diagnostics"],
         queryFn: async () => {
             const { data, error } = await supabase
-                .from("pesquisa_diagnostico_clientes")
-                .select("*, profiles:user_id(full_name)")
-                .order("created_at", { ascending: false });
+                .rpc('get_master_diagnostics');
 
             if (error) throw error;
-            // Need to cast because Supabase array type issues on joins
             return (data as any) as DiagnosticRow[];
         },
         enabled: !!user && user.email?.toLowerCase() === MASTER_DEV_EMAIL,
@@ -70,16 +69,11 @@ export default function MasterDiagnostics() {
         if (!rows || rows.length === 0) return;
 
         try {
-            // Include 'nome' from profiles explicitly
-            const headersList = ["nome_usuario", ...Object.keys(rows[0]).filter(k => k !== "profiles")];
+            const headersList = Object.keys(rows[0]);
             const headers = headersList.join(",");
 
             const csvRows = rows.map(row => {
                 const rowValues = headersList.map(header => {
-                    if (header === "nome_usuario") {
-                        const name = row.profiles?.full_name || row.user_id;
-                        return `"${name.replace(/"/g, '""')}"`;
-                    }
                     const value = (row as any)[header];
                     if (typeof value === "string") {
                         const escaped = value.replace(/"/g, '""');
@@ -119,7 +113,7 @@ export default function MasterDiagnostics() {
     };
 
     const handleExportSingle = (row: DiagnosticRow) => {
-        const nameClean = (row.profiles?.full_name || "usuario").replace(/[^a-zA-Z0-9]/g, "_").toLowerCase();
+        const nameClean = (row.nome_pagamento || "usuario").replace(/[^a-zA-Z0-9]/g, "_").toLowerCase();
         exportToCSV([row], `diagnostico_${nameClean}_${new Date().toISOString().split('T')[0]}.csv`);
     };
 
@@ -173,7 +167,7 @@ export default function MasterDiagnostics() {
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight">Master Dados (Developer)</h1>
                     <p className="text-muted-foreground mt-1">
-                        Respostas formatadas em Segmentação para Tráfego Pago (Google Ads / Meta Ads).
+                        Respostas formatadas em Segmentação para Tráfego Pago com Validação Nativa.
                     </p>
                 </div>
                 <Button onClick={handleExportAllCSV} disabled={isExporting} className="gap-2 shadow-sm bg-green-600 hover:bg-green-700">
@@ -188,14 +182,13 @@ export default function MasterDiagnostics() {
                         <Table>
                             <TableHeader className="bg-muted/50">
                                 <TableRow>
-                                    <TableHead className="whitespace-nowrap min-w-[150px]">Nome & Data</TableHead>
+                                    <TableHead className="whitespace-nowrap min-w-[200px]">Nome & Email (Pagamento)</TableHead>
                                     <TableHead className="whitespace-nowrap min-w-[150px]">Perfil (Idade/Gênero)</TableHead>
                                     <TableHead className="whitespace-nowrap min-w-[200px]">Geografia & Renda</TableHead>
                                     <TableHead className="whitespace-nowrap min-w-[200px]">Emprego & Educação</TableHead>
                                     <TableHead className="whitespace-nowrap min-w-[180px]">Status Familiar</TableHead>
-                                    <TableHead className="whitespace-nowrap min-w-[220px]">Interesses / Origem</TableHead>
                                     <TableHead className="whitespace-nowrap text-center">Bônus</TableHead>
-                                    <TableHead className="whitespace-nowrap text-right min-w-[120px]">Ações</TableHead>
+                                    <TableHead className="whitespace-nowrap text-right min-w-[150px]">Ações</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -209,8 +202,9 @@ export default function MasterDiagnostics() {
                                     diagnostics.map((row) => (
                                         <TableRow key={row.id}>
                                             <TableCell>
-                                                <div className="font-medium">{row.profiles?.full_name || "Sem nome"}</div>
-                                                <div className="text-xs text-muted-foreground">{new Date(row.created_at).toLocaleDateString("pt-BR")}</div>
+                                                <div className="font-medium">{row.nome_pagamento || "Sem nome"}</div>
+                                                <div className="text-xs text-muted-foreground">{row.email_pagamento || "Sem e-mail"}</div>
+                                                <div className="text-[10px] text-muted-foreground/80 mt-1">{new Date(row.created_at).toLocaleDateString("pt-BR")}</div>
                                             </TableCell>
                                             <TableCell>
                                                 <div className="text-sm">{row.idade || "-"}</div>
@@ -228,10 +222,6 @@ export default function MasterDiagnostics() {
                                                 <div className="text-sm">{row.estado_civil || "-"}</div>
                                                 <div className="text-xs text-muted-foreground">{row.status_parental || "-"}</div>
                                             </TableCell>
-                                            <TableCell>
-                                                <div className="text-sm truncate max-w-[200px]" title={row.como_conheceu}>{row.como_conheceu || "-"}</div>
-                                                <div className="text-xs text-muted-foreground truncate max-w-[200px]" title={row.influencia_compra}>{row.influencia_compra || "-"}</div>
-                                            </TableCell>
                                             <TableCell className="text-center">
                                                 {row.bonus_resgatado ? (
                                                     <span className="text-green-600 font-medium text-[10px] uppercase bg-green-100 px-2 py-1 rounded-full">OK</span>
@@ -241,6 +231,15 @@ export default function MasterDiagnostics() {
                                             </TableCell>
                                             <TableCell className="text-right">
                                                 <div className="flex items-center justify-end gap-2">
+                                                    <Button
+                                                        variant="outline"
+                                                        size="icon"
+                                                        className="h-8 w-8 text-purple-600 hover:text-purple-700 hover:bg-purple-50"
+                                                        title="Ver as 17 Respostas"
+                                                        onClick={() => setViewingRow(row)}
+                                                    >
+                                                        <Eye className="h-4 w-4" />
+                                                    </Button>
                                                     <Button
                                                         variant="outline"
                                                         size="icon"
@@ -270,6 +269,81 @@ export default function MasterDiagnostics() {
                     </div>
                 </CardContent>
             </Card>
+
+            {/* View Details Modal */}
+            <Dialog open={!!viewingRow} onOpenChange={(open) => !open && setViewingRow(null)}>
+                <DialogContent className="max-w-3xl max-h-[90vh] flex flex-col">
+                    <DialogHeader>
+                        <DialogTitle>As 17 Respostas do Diagnóstico</DialogTitle>
+                        <DialogDescription>
+                            Usuário: <strong>{viewingRow?.nome_pagamento}</strong> ({viewingRow?.email_pagamento})
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <ScrollArea className="flex-1 overflow-y-auto pr-4 mt-4 text-sm">
+                        {viewingRow && (
+                            <div className="space-y-6 pb-6">
+                                <div>
+                                    <h3 className="font-semibold text-primary border-b pb-1 mb-3">1. Perfil e Geografia</h3>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div><span className="text-muted-foreground">Idade:</span> {viewingRow.idade}</div>
+                                        <div><span className="text-muted-foreground">Gênero:</span> {viewingRow.genero}</div>
+                                        <div><span className="text-muted-foreground">Localização:</span> {viewingRow.cidade_estado_pais}</div>
+                                        <div><span className="text-muted-foreground">Renda Mensal:</span> {viewingRow.renda_mensal}</div>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <h3 className="font-semibold text-primary border-b pb-1 mb-3">2. Status e Educação</h3>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div><span className="text-muted-foreground">Status Parental:</span> {viewingRow.status_parental}</div>
+                                        <div><span className="text-muted-foreground">Estado Civil:</span> {viewingRow.estado_civil}</div>
+                                        <div><span className="text-muted-foreground">Escolaridade:</span> {viewingRow.escolaridade}</div>
+                                        <div><span className="text-muted-foreground">Status do Imóvel:</span> {viewingRow.status_proprietario}</div>
+                                        <div className="col-span-2"><span className="text-muted-foreground">Emprego Atual:</span> {viewingRow.emprego_atual}</div>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <h3 className="font-semibold text-primary border-b pb-1 mb-3">3. Origem e Comportamento</h3>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div><span className="text-muted-foreground">Como conheceu:</span> {viewingRow.como_conheceu}</div>
+                                        <div><span className="text-muted-foreground">Tempo que conhece:</span> {viewingRow.tempo_conhece}</div>
+                                        <div className="col-span-2"><span className="text-muted-foreground">Comprou similar antes:</span> {viewingRow.comprou_similar}</div>
+                                        <div className="col-span-2"><span className="text-muted-foreground">Maior influência p/ comprar:</span> {viewingRow.influencia_compra}</div>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <h3 className="font-semibold text-primary border-b pb-1 mb-3">4. Aprofundamento e Dores (Textos Longos)</h3>
+                                    <div className="space-y-4">
+                                        <div>
+                                            <span className="text-muted-foreground block mb-1">Sobre você e a história do restaurante:</span>
+                                            <p className="bg-muted p-3 rounded-md italic">"{viewingRow.sobre_voce}"</p>
+                                        </div>
+                                        <div>
+                                            <span className="text-muted-foreground block mb-1">Principais objetivos com a plataforma:</span>
+                                            <p className="bg-muted p-3 rounded-md italic">"{viewingRow.objetivos}"</p>
+                                        </div>
+                                        <div>
+                                            <span className="text-muted-foreground block mb-1">Maiores sonhos hoje:</span>
+                                            <p className="bg-muted p-3 rounded-md italic">"{viewingRow.sonhos}"</p>
+                                        </div>
+                                        <div>
+                                            <span className="text-muted-foreground block mb-1">Maiores dificuldades ou medos:</span>
+                                            <p className="bg-muted p-3 rounded-md italic">"{viewingRow.dificuldades_medos}"</p>
+                                        </div>
+                                        <div>
+                                            <span className="text-muted-foreground block mb-1">Ferramenta ou função desejada no futuro:</span>
+                                            <p className="bg-muted p-3 rounded-md italic">"{viewingRow.ferramenta_desejada}"</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </ScrollArea>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }

@@ -81,8 +81,8 @@ const ChipSelection = ({
                         type="button"
                         onClick={() => handleSelect(opt)}
                         className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${!isOther && value === opt
-                                ? "bg-primary text-primary-foreground shadow-md ring-2 ring-primary ring-offset-2"
-                                : "bg-muted text-muted-foreground hover:bg-muted/80 border border-border"
+                            ? "bg-primary text-primary-foreground shadow-md ring-2 ring-primary ring-offset-2"
+                            : "bg-muted text-muted-foreground hover:bg-muted/80 border border-border"
                             }`}
                     >
                         {opt}
@@ -93,8 +93,8 @@ const ChipSelection = ({
                         type="button"
                         onClick={handleOtherSelect}
                         className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${isOther
-                                ? "bg-primary text-primary-foreground shadow-md ring-2 ring-primary ring-offset-2"
-                                : "bg-muted text-muted-foreground hover:bg-muted/80 border border-border"
+                            ? "bg-primary text-primary-foreground shadow-md ring-2 ring-primary ring-offset-2"
+                            : "bg-muted text-muted-foreground hover:bg-muted/80 border border-border"
                             }`}
                     >
                         {otherLabel}
@@ -127,7 +127,42 @@ export default function Obrigado() {
         setData((prev) => ({ ...prev, [field]: value }));
     };
 
+    const validateStep = (currentStep: number): boolean => {
+        let requiredFields: (keyof WizardData)[] = [];
+        switch (currentStep) {
+            case 1:
+                requiredFields = ["idade", "genero", "cidade_estado_pais", "renda_mensal"];
+                break;
+            case 2:
+                requiredFields = ["status_parental", "estado_civil", "escolaridade", "status_proprietario", "emprego_atual"];
+                break;
+            case 3:
+                requiredFields = ["como_conheceu", "tempo_conhece", "comprou_similar", "influencia_compra"];
+                break;
+            case 4:
+                requiredFields = ["sobre_voce", "objetivos"];
+                break;
+            case 5:
+                requiredFields = ["sonhos", "dificuldades_medos", "ferramenta_desejada"];
+                break;
+        }
+
+        const emptyFields = requiredFields.filter(field => !data[field] || data[field].toString().trim() === "");
+
+        if (emptyFields.length > 0) {
+            toast({
+                variant: "destructive",
+                title: "Atenção",
+                description: "Por favor, preencha todas as perguntas desta etapa para continuar.",
+            });
+            return false;
+        }
+
+        return true;
+    };
+
     const nextStep = () => {
+        if (!validateStep(step)) return;
         window.scrollTo({ top: 0, behavior: "smooth" });
         setStep((prev) => Math.min(prev + 1, 5));
     };
@@ -138,6 +173,8 @@ export default function Obrigado() {
     };
 
     const handleSubmit = async () => {
+        if (!validateStep(5)) return;
+
         setIsSubmitting(true);
         try {
             const { data: userData, error: userError } = await supabase.auth.getUser();
