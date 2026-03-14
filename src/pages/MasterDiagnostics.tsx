@@ -1,11 +1,11 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { Navigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Loader2, Download, ShieldAlert } from "lucide-react";
+import { Loader2, Download, ShieldAlert, Trash2, FileDown } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/components/ui/use-toast";
 
@@ -34,12 +34,17 @@ interface DiagnosticRow {
     ferramenta_desejada: string;
     bonus_resgatado: boolean;
     created_at: string;
+    profiles?: {
+        full_name: string | null;
+    } | null;
 }
 
 export default function MasterDiagnostics() {
     const { user, loading: authLoading } = useAuth();
     const { toast } = useToast();
+    const queryClient = useQueryClient();
     const [isExporting, setIsExporting] = useState(false);
+    const [deletingId, setDeletingId] = useState<string | null>(null);
 
     // Security layer at component level
     if (!authLoading && user?.email?.toLowerCase() !== MASTER_DEV_EMAIL) {
@@ -51,40 +56,38 @@ export default function MasterDiagnostics() {
         queryFn: async () => {
             const { data, error } = await supabase
                 .from("pesquisa_diagnostico_clientes")
-                .select("*")
+                .select("*, profiles:user_id(full_name)")
                 .order("created_at", { ascending: false });
 
             if (error) throw error;
-            return data as DiagnosticRow[];
+            // Need to cast because Supabase array type issues on joins
+            return (data as any) as DiagnosticRow[];
         },
         enabled: !!user && user.email?.toLowerCase() === MASTER_DEV_EMAIL,
     });
 
-    const handleExportCSV = () => {
-        if (!diagnostics || diagnostics.length === 0) {
-            toast({
-                title: "Aviso",
-                description: "Não há dados para exportar.",
-                variant: "destructive",
-            });
-            return;
-        }
+    const exportToCSV = (rows: DiagnosticRow[], filename: string) => {
+        if (!rows || rows.length === 0) return;
 
-        setIsExporting(true);
         try {
-            // Get all headers from the first object
-            const headers = Object.keys(diagnostics[0]).join(",");
+            // Include 'nome' from profiles explicitly
+            const headersList = ["nome_usuario", ...Object.keys(rows[0]).filter(k => k !== "profiles")];
+            const headers = headersList.join(",");
 
-            // Convert rows to CSV string
-            const csvRows = diagnostics.map(row => {
-                return Object.values(row).map(value => {
-                    // Escape quotes and format strings for CSV
+            const csvRows = rows.map(row => {
+                const rowValues = headersList.map(header => {
+                    if (header === "nome_usuario") {
+                        const name = row.profiles?.full_name || row.user_id;
+                        return `"${name.replace(/"/g, '""')}"`;
+                    }
+                    const value = (row as any)[header];
                     if (typeof value === "string") {
                         const escaped = value.replace(/"/g, '""');
                         return `"${escaped}"`;
                     }
                     return value;
-                }).join(",");
+                });
+                return rowValues.join(",");
             });
 
             const csvContent = [headers, ...csvRows].join("\n");
@@ -93,24 +96,48 @@ export default function MasterDiagnostics() {
 
             const link = document.createElement("a");
             link.href = url;
-            link.setAttribute("download", `diagnosticos_cheffnex_${new Date().toISOString().split('T')[0]}.csv`);
+            link.setAttribute("download", filename);
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
 
-            toast({
-                title: "Sucesso",
-                description: "O arquivo CSV foi baixado com sucesso.",
-            });
+            toast({ title: "Sucesso", description: "O arquivo CSV foi salvo." });
         } catch (err) {
             console.error(err);
-            toast({
-                title: "Erro na exportação",
-                description: "Infelizmente houve um erro ao processar o CSV.",
-                variant: "destructive",
-            });
+            toast({ title: "Erro", description: "Falha na exportação.", variant: "destructive" });
+        }
+    };
+
+    const handleExportAllCSV = () => {
+        if (!diagnostics || diagnostics.length === 0) {
+            toast({ title: "Aviso", description: "Não há dados para exportar.", variant: "destructive" });
+            return;
+        }
+        setIsExporting(true);
+        exportToCSV(diagnostics, `diagnosticos_todos_${new Date().toISOString().split('T')[0]}.csv`);
+        setIsExporting(false);
+    };
+
+    const handleExportSingle = (row: DiagnosticRow) => {
+        const nameClean = (row.profiles?.full_name || "usuario").replace(/[^a-zA-Z0-9]/g, "_").toLowerCase();
+        exportToCSV([row], `diagnostico_${nameClean}_${new Date().toISOString().split('T')[0]}.csv`);
+    };
+
+    const handleDelete = async (id: string) => {
+        if (!window.confirm("Você tem certeza absoluta que deseja excluir este diagnóstico? Isso não pode ser desfeito.")) {
+            return;
+        }
+        setDeletingId(id);
+        try {
+            const { error } = await supabase.from("pesquisa_diagnostico_clientes").delete().eq("id", id);
+            if (error) throw error;
+
+            toast({ title: "Excluído com sucesso" });
+            queryClient.invalidateQueries({ queryKey: ["master-diagnostics"] });
+        } catch (e: any) {
+            toast({ title: "Erro ao excluir", description: e.message, variant: "destructive" });
         } finally {
-            setIsExporting(false);
+            setDeletingId(null);
         }
     };
 
@@ -146,12 +173,12 @@ export default function MasterDiagnostics() {
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight">Master Dados (Developer)</h1>
                     <p className="text-muted-foreground mt-1">
-                        Visualização exclusiva de todos os dados do Onboarding/Wizard. Respostas brutas para BI e Ads.
+                        Respostas formatadas em Segmentação para Tráfego Pago (Google Ads / Meta Ads).
                     </p>
                 </div>
-                <Button onClick={handleExportCSV} disabled={isExporting} className="gap-2 shadow-sm">
+                <Button onClick={handleExportAllCSV} disabled={isExporting} className="gap-2 shadow-sm bg-green-600 hover:bg-green-700">
                     {isExporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-                    Exportar para CSV (Excel)
+                    Baixar TODOS em CSV
                 </Button>
             </div>
 
@@ -161,45 +188,79 @@ export default function MasterDiagnostics() {
                         <Table>
                             <TableHeader className="bg-muted/50">
                                 <TableRow>
-                                    <TableHead className="whitespace-nowrap">Data</TableHead>
-                                    <TableHead className="whitespace-nowrap">ID Usuário</TableHead>
-                                    <TableHead className="whitespace-nowrap">Idade</TableHead>
-                                    <TableHead className="whitespace-nowrap">Renda Mensal</TableHead>
-                                    <TableHead className="whitespace-nowrap">Emprego</TableHead>
-                                    <TableHead className="whitespace-nowrap">Dificuldades/Medos</TableHead>
-                                    <TableHead className="whitespace-nowrap">Bônus Resgatado?</TableHead>
+                                    <TableHead className="whitespace-nowrap min-w-[150px]">Nome & Data</TableHead>
+                                    <TableHead className="whitespace-nowrap min-w-[150px]">Perfil (Idade/Gênero)</TableHead>
+                                    <TableHead className="whitespace-nowrap min-w-[200px]">Geografia & Renda</TableHead>
+                                    <TableHead className="whitespace-nowrap min-w-[200px]">Emprego & Educação</TableHead>
+                                    <TableHead className="whitespace-nowrap min-w-[180px]">Status Familiar</TableHead>
+                                    <TableHead className="whitespace-nowrap min-w-[220px]">Interesses / Origem</TableHead>
+                                    <TableHead className="whitespace-nowrap text-center">Bônus</TableHead>
+                                    <TableHead className="whitespace-nowrap text-right min-w-[120px]">Ações</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
                                 {!diagnostics || diagnostics.length === 0 ? (
                                     <TableRow>
-                                        <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                                        <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                                             Nenhum diagnóstico preenchido até o momento.
                                         </TableCell>
                                     </TableRow>
                                 ) : (
                                     diagnostics.map((row) => (
                                         <TableRow key={row.id}>
-                                            <TableCell className="whitespace-nowrap">
-                                                {new Date(row.created_at).toLocaleDateString("pt-BR")}
-                                            </TableCell>
-                                            <TableCell className="font-mono text-xs opacity-70">
-                                                {row.user_id.split("-")[0]}...
-                                            </TableCell>
-                                            <TableCell>{row.idade || "-"}</TableCell>
-                                            <TableCell>{row.renda_mensal || "-"}</TableCell>
-                                            <TableCell className="max-w-[150px] truncate" title={row.emprego_atual}>
-                                                {row.emprego_atual || "-"}
-                                            </TableCell>
-                                            <TableCell className="max-w-[250px] truncate" title={row.dificuldades_medos}>
-                                                {row.dificuldades_medos || "-"}
+                                            <TableCell>
+                                                <div className="font-medium">{row.profiles?.full_name || "Sem nome"}</div>
+                                                <div className="text-xs text-muted-foreground">{new Date(row.created_at).toLocaleDateString("pt-BR")}</div>
                                             </TableCell>
                                             <TableCell>
+                                                <div className="text-sm">{row.idade || "-"}</div>
+                                                <div className="text-xs text-muted-foreground">{row.genero || "-"}</div>
+                                            </TableCell>
+                                            <TableCell>
+                                                <div className="text-sm truncate max-w-[180px]" title={row.cidade_estado_pais}>{row.cidade_estado_pais || "-"}</div>
+                                                <div className="text-xs text-muted-foreground">{row.renda_mensal || "-"}</div>
+                                            </TableCell>
+                                            <TableCell>
+                                                <div className="text-sm truncate max-w-[180px]" title={row.emprego_atual}>{row.emprego_atual || "-"}</div>
+                                                <div className="text-xs text-muted-foreground truncate max-w-[180px]" title={row.escolaridade}>{row.escolaridade || "-"}</div>
+                                            </TableCell>
+                                            <TableCell>
+                                                <div className="text-sm">{row.estado_civil || "-"}</div>
+                                                <div className="text-xs text-muted-foreground">{row.status_parental || "-"}</div>
+                                            </TableCell>
+                                            <TableCell>
+                                                <div className="text-sm truncate max-w-[200px]" title={row.como_conheceu}>{row.como_conheceu || "-"}</div>
+                                                <div className="text-xs text-muted-foreground truncate max-w-[200px]" title={row.influencia_compra}>{row.influencia_compra || "-"}</div>
+                                            </TableCell>
+                                            <TableCell className="text-center">
                                                 {row.bonus_resgatado ? (
-                                                    <span className="text-green-600 font-medium text-xs bg-green-100 px-2 py-1 rounded">Sim</span>
+                                                    <span className="text-green-600 font-medium text-[10px] uppercase bg-green-100 px-2 py-1 rounded-full">OK</span>
                                                 ) : (
-                                                    <span className="text-muted-foreground text-xs">Não</span>
+                                                    <span className="text-muted-foreground text-[10px] uppercase bg-muted px-2 py-1 rounded-full">Não</span>
                                                 )}
+                                            </TableCell>
+                                            <TableCell className="text-right">
+                                                <div className="flex items-center justify-end gap-2">
+                                                    <Button
+                                                        variant="outline"
+                                                        size="icon"
+                                                        className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                                        title="Baixar CSV Deste Usuário"
+                                                        onClick={() => handleExportSingle(row)}
+                                                    >
+                                                        <FileDown className="h-4 w-4" />
+                                                    </Button>
+                                                    <Button
+                                                        variant="outline"
+                                                        size="icon"
+                                                        className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                                                        title="Excluir Diagnóstico"
+                                                        onClick={() => handleDelete(row.id)}
+                                                        disabled={deletingId === row.id}
+                                                    >
+                                                        {deletingId === row.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                                                    </Button>
+                                                </div>
                                             </TableCell>
                                         </TableRow>
                                     ))
@@ -209,10 +270,6 @@ export default function MasterDiagnostics() {
                     </div>
                 </CardContent>
             </Card>
-
-            <p className="text-xs text-muted-foreground max-w-2xl">
-                * A tabela exibe apenas colunas de destaque para performance visual. Ao clicar em "Exportar para CSV", TODAS as 17 respostas incluindo textos longos (Objetivos, Sonhos, Ferramentas) serão baixadas.
-            </p>
         </div>
     );
 }

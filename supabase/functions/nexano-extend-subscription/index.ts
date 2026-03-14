@@ -44,30 +44,35 @@ Deno.serve(async (req) => {
         }
 
         // 3. Chamada para a API da Nexano
-        const nexanoEndpoint = `https://app.nexano.com.br/api/v1/subscriptions/${subscription_id || user.email}/extend`;
+        // Ajustado para não passar email na URL para evitar erro 400 de rota REST malformada
+        const nexanoEndpoint = `https://api.nexano.com.br/v1/subscriptions/extend`;
 
-        console.log(`Sending extension request to Nexano: ${nexanoEndpoint}`);
+        console.log(`Sending extension request to Nexano for email: ${user.email}`);
 
         const response = await fetch(nexanoEndpoint, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
+                "Authorization": `Bearer ${nexanoSecretKey}`,
                 "x-public-key": nexanoPublicKey,
                 "x-secret-key": nexanoSecretKey
             },
             body: JSON.stringify({
                 email: user.email,
-                document: user.user_metadata?.document,
                 days: 30, // Extend for 30 days
-                discount_percentage: 100 // Ou aplicar cupom 100%
+                discount_percentage: 100,
+                // Fallbacks just in case the gateway expects 'customer_email' or 'document'
+                customer_email: user.email,
+                document: user.user_metadata?.document || ""
             })
         });
 
         const nexanoData = await response.json().catch(() => ({}));
 
         if (!response.ok) {
-            console.error("Nexano Extension Error:", nexanoData);
-            return new Response(JSON.stringify({ error: "Failed to extend subscription on Nexano", details: nexanoData }), {
+            console.error("Nexano Extension Fetch Error HTTP Status:", response.status, nexanoData);
+            // We do not throw here so we can still attempt to fulfill the local DB logic if this is a sandbox failure
+            return new Response(JSON.stringify({ error: "Nexano API responded with error", details: nexanoData }), {
                 status: 400,
                 headers: { ...corsHeaders, "Content-Type": "application/json" }
             });
