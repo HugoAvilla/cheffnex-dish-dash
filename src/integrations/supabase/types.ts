@@ -201,11 +201,12 @@ export type Database = {
           current_stock: number
           expiration_date: string | null
           id: string
+          last_stock_quantity: number
           min_stock: number
           name: string
           restaurant_id: string
           unit: string
-          last_stock_quantity: number
+          unit_value: number | null
         }
         Insert: {
           category?: string
@@ -214,11 +215,12 @@ export type Database = {
           current_stock?: number
           expiration_date?: string | null
           id?: string
+          last_stock_quantity?: number
           min_stock?: number
           name: string
           restaurant_id: string
           unit?: string
-          last_stock_quantity?: number
+          unit_value?: number | null
         }
         Update: {
           category?: string
@@ -227,11 +229,12 @@ export type Database = {
           current_stock?: number
           expiration_date?: string | null
           id?: string
+          last_stock_quantity?: number
           min_stock?: number
           name?: string
           restaurant_id?: string
           unit?: string
-          last_stock_quantity?: number
+          unit_value?: number | null
         }
         Relationships: [
           {
@@ -338,6 +341,81 @@ export type Database = {
           },
         ]
       }
+      pesquisa_diagnostico_clientes: {
+        Row: {
+          bonus_resgatado: boolean
+          cidade_estado_pais: string | null
+          como_conheceu: string | null
+          comprou_similar: string | null
+          created_at: string
+          dificuldades_medos: string | null
+          emprego_atual: string | null
+          escolaridade: string | null
+          estado_civil: string | null
+          ferramenta_desejada: string | null
+          genero: string | null
+          id: string
+          idade: string | null
+          influencia_compra: string | null
+          objetivos: string | null
+          renda_mensal: string | null
+          sobre_voce: string | null
+          sonhos: string | null
+          status_parental: string | null
+          status_proprietario: string | null
+          tempo_conhece: string | null
+          user_id: string
+        }
+        Insert: {
+          bonus_resgatado?: boolean
+          cidade_estado_pais?: string | null
+          como_conheceu?: string | null
+          comprou_similar?: string | null
+          created_at?: string
+          dificuldades_medos?: string | null
+          emprego_atual?: string | null
+          escolaridade?: string | null
+          estado_civil?: string | null
+          ferramenta_desejada?: string | null
+          genero?: string | null
+          id?: string
+          idade?: string | null
+          influencia_compra?: string | null
+          objetivos?: string | null
+          renda_mensal?: string | null
+          sobre_voce?: string | null
+          sonhos?: string | null
+          status_parental?: string | null
+          status_proprietario?: string | null
+          tempo_conhece?: string | null
+          user_id: string
+        }
+        Update: {
+          bonus_resgatado?: boolean
+          cidade_estado_pais?: string | null
+          como_conheceu?: string | null
+          comprou_similar?: string | null
+          created_at?: string
+          dificuldades_medos?: string | null
+          emprego_atual?: string | null
+          escolaridade?: string | null
+          estado_civil?: string | null
+          ferramenta_desejada?: string | null
+          genero?: string | null
+          id?: string
+          idade?: string | null
+          influencia_compra?: string | null
+          objetivos?: string | null
+          renda_mensal?: string | null
+          sobre_voce?: string | null
+          sonhos?: string | null
+          status_parental?: string | null
+          status_proprietario?: string | null
+          tempo_conhece?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       plans: {
         Row: {
           created_at: string
@@ -370,7 +448,6 @@ export type Database = {
       }
       products: {
         Row: {
-          badge: string | null
           category: string
           category_id: string | null
           created_at: string
@@ -378,14 +455,11 @@ export type Database = {
           id: string
           image_url: string | null
           is_active: boolean
-          is_featured: boolean
           name: string
-          promo_price: number | null
           restaurant_id: string
           sell_price: number
         }
         Insert: {
-          badge?: string | null
           category?: string
           category_id?: string | null
           created_at?: string
@@ -393,14 +467,11 @@ export type Database = {
           id?: string
           image_url?: string | null
           is_active?: boolean
-          is_featured?: boolean
           name: string
-          promo_price?: number | null
           restaurant_id: string
           sell_price?: number
         }
         Update: {
-          badge?: string | null
           category?: string
           category_id?: string | null
           created_at?: string
@@ -408,9 +479,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           is_active?: boolean
-          is_featured?: boolean
           name?: string
-          promo_price?: number | null
           restaurant_id?: string
           sell_price?: number
         }
@@ -502,51 +571,48 @@ export type Database = {
       restaurants: {
         Row: {
           banner_url: string | null
-          close_time: string | null
           created_at: string
           document: string | null
+          expiry_alert_days: number | null
           id: string
           is_open: boolean | null
           logo_url: string | null
+          low_stock_threshold: number | null
           name: string
           name_color: string | null
-          open_time: string | null
           phone: string | null
           plan_id: string | null
           primary_color: string | null
-          promo_banner_text: string | null
         }
         Insert: {
           banner_url?: string | null
-          close_time?: string | null
           created_at?: string
           document?: string | null
+          expiry_alert_days?: number | null
           id?: string
           is_open?: boolean | null
           logo_url?: string | null
+          low_stock_threshold?: number | null
           name: string
           name_color?: string | null
-          open_time?: string | null
           phone?: string | null
           plan_id?: string | null
           primary_color?: string | null
-          promo_banner_text?: string | null
         }
         Update: {
           banner_url?: string | null
-          close_time?: string | null
           created_at?: string
           document?: string | null
+          expiry_alert_days?: number | null
           id?: string
           is_open?: boolean | null
           logo_url?: string | null
+          low_stock_threshold?: number | null
           name?: string
           name_color?: string | null
-          open_time?: string | null
           phone?: string | null
           plan_id?: string | null
           primary_color?: string | null
-          promo_banner_text?: string | null
         }
         Relationships: [
           {
@@ -635,6 +701,10 @@ export type Database = {
       }
       get_daily_cmv: { Args: { _restaurant_id: string }; Returns: number }
       get_daily_revenue: { Args: { _restaurant_id: string }; Returns: number }
+      get_user_id_by_email_or_document: {
+        Args: { p_document: string; p_email: string }
+        Returns: string
+      }
       get_user_restaurant_id: { Args: { _user_id: string }; Returns: string }
       has_role: {
         Args: {
@@ -659,116 +729,116 @@ type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
 
 export type Tables<
   DefaultSchemaTableNameOrOptions extends
-  | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
-  | { schema: keyof DatabaseWithoutInternals },
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-  ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-    DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-  : never = never,
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+    : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
   ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-    DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
       Row: infer R
     }
-  ? R
-  : never
+    ? R
+    : never
   : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
-    DefaultSchema["Views"])
-  ? (DefaultSchema["Tables"] &
-    DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
-      Row: infer R
-    }
-  ? R
-  : never
-  : never
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+        Row: infer R
+      }
+      ? R
+      : never
+    : never
 
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
-  | keyof DefaultSchema["Tables"]
-  | { schema: keyof DatabaseWithoutInternals },
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-  ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-  : never = never,
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
   ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-    Insert: infer I
-  }
-  ? I
-  : never
+      Insert: infer I
+    }
+    ? I
+    : never
   : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
-  ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
-    Insert: infer I
-  }
-  ? I
-  : never
-  : never
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Insert: infer I
+      }
+      ? I
+      : never
+    : never
 
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
-  | keyof DefaultSchema["Tables"]
-  | { schema: keyof DatabaseWithoutInternals },
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-  ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-  : never = never,
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
   ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-    Update: infer U
-  }
-  ? U
-  : never
+      Update: infer U
+    }
+    ? U
+    : never
   : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
-  ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
-    Update: infer U
-  }
-  ? U
-  : never
-  : never
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Update: infer U
+      }
+      ? U
+      : never
+    : never
 
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
-  | keyof DefaultSchema["Enums"]
-  | { schema: keyof DatabaseWithoutInternals },
+    | keyof DefaultSchema["Enums"]
+    | { schema: keyof DatabaseWithoutInternals },
   EnumName extends DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-  ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-  : never = never,
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    : never = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
   ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
   : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
-  ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
-  : never
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+    : never
 
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
-  | keyof DefaultSchema["CompositeTypes"]
-  | { schema: keyof DatabaseWithoutInternals },
+    | keyof DefaultSchema["CompositeTypes"]
+    | { schema: keyof DatabaseWithoutInternals },
   CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-  ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-  : never = never,
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    : never = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
   ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
   : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
-  ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
-  : never
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+    : never
 
 export const Constants = {
   public: {
