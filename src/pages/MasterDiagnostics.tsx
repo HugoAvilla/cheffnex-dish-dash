@@ -9,7 +9,7 @@ import { Loader2, Download, ShieldAlert } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/components/ui/use-toast";
 
-const MASTER_DEV_EMAIL = "Hg.lavila@gmail.com";
+const MASTER_DEV_EMAIL = "hg.lavila@gmail.com";
 
 interface DiagnosticRow {
     id: string;
@@ -42,7 +42,7 @@ export default function MasterDiagnostics() {
     const [isExporting, setIsExporting] = useState(false);
 
     // Security layer at component level
-    if (!authLoading && user?.email !== MASTER_DEV_EMAIL) {
+    if (!authLoading && user?.email?.toLowerCase() !== MASTER_DEV_EMAIL) {
         return <Navigate to="/admin" replace />;
     }
 
@@ -57,7 +57,7 @@ export default function MasterDiagnostics() {
             if (error) throw error;
             return data as DiagnosticRow[];
         },
-        enabled: !!user && user.email === MASTER_DEV_EMAIL,
+        enabled: !!user && user.email?.toLowerCase() === MASTER_DEV_EMAIL,
     });
 
     const handleExportCSV = () => {

@@ -21,7 +21,7 @@ const getNavItems = (restaurantId: string | null, email: string | undefined) => 
     { to: restaurantId ? `/menu/${restaurantId}` : "/", icon: Eye, label: "Ver Cardápio" },
   ];
 
-  if (email === "Hg.lavila@gmail.com") {
+  if (email?.toLowerCase() === "hg.lavila@gmail.com") {
     items.splice(11, 0, { to: "/admin/master-diagnostics", icon: ShieldAlert, label: "Master Dados" });
   }
 
