@@ -31,6 +31,7 @@ import ResetPassword from "./pages/ResetPassword";
 import AdminSettings from "./pages/AdminSettings";
 import AdminTemplates from "./pages/AdminTemplates";
 import Obrigado from "./pages/Obrigado";
+import MasterDiagnostics from "./pages/MasterDiagnostics";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -78,6 +79,7 @@ const App = () => (
                   <Route path="/admin/financeiro" element={<ProtectedRoute><Financeiro /></ProtectedRoute>} />
                   <Route path="/admin/settings" element={<ProtectedRoute><AdminSettings /></ProtectedRoute>} />
                   <Route path="/admin/templates" element={<ProtectedRoute><AdminTemplates /></ProtectedRoute>} />
+                  <Route path="/admin/master-diagnostics" element={<ProtectedRoute><MasterDiagnostics /></ProtectedRoute>} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </BrowserRouter>

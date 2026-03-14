@@ -1,30 +1,38 @@
 import { ReactNode } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
-import { LayoutDashboard, Package, ShoppingBag, ClipboardList, LogOut, List, Eye, Store, Paintbrush, BarChart2, DollarSign, Settings, BookTemplate } from "lucide-react";
+import { LayoutDashboard, Package, ShoppingBag, ClipboardList, LogOut, List, Eye, Store, Paintbrush, BarChart2, DollarSign, Settings, BookTemplate, ShieldAlert } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { ThemeToggle } from "./ThemeToggle";
 import logoFinal from "@/assets/logo-final.png";
 
-const getNavItems = (restaurantId: string | null) => [
-  { to: "/admin", icon: LayoutDashboard, label: "Dashboard" },
-  { to: "/admin/orders", icon: ClipboardList, label: "Pedidos" },
-  { to: "/admin/products", icon: ShoppingBag, label: "Produtos" },
-  { to: "/admin/categories", icon: List, label: "Categorias" },
-  { to: "/admin/templates", icon: BookTemplate, label: "Templates Livres" },
-  { to: "/admin/stock", icon: Package, label: "Estoque (Ficha Técnica)" },
-  { to: "/admin/financeiro", icon: DollarSign, label: "Financeiro & Cupons" },
-  { to: "/admin/relatorios", icon: BarChart2, label: "Relatórios de Vendas" },
-  { to: "/admin/storefront", icon: Paintbrush, label: "Personalizar Loja" },
-  { to: "/admin/restaurant", icon: Store, label: "Meu Restaurante" },
-  { to: "/admin/settings", icon: Settings, label: "Configurações Globais" },
-  { to: restaurantId ? `/menu/${restaurantId}` : "/", icon: Eye, label: "Ver Cardápio" },
-];
+const getNavItems = (restaurantId: string | null, email: string | undefined) => {
+  const items = [
+    { to: "/admin", icon: LayoutDashboard, label: "Dashboard" },
+    { to: "/admin/orders", icon: ClipboardList, label: "Pedidos" },
+    { to: "/admin/products", icon: ShoppingBag, label: "Produtos" },
+    { to: "/admin/categories", icon: List, label: "Categorias" },
+    { to: "/admin/templates", icon: BookTemplate, label: "Templates Livres" },
+    { to: "/admin/stock", icon: Package, label: "Estoque (Ficha Técnica)" },
+    { to: "/admin/financeiro", icon: DollarSign, label: "Financeiro & Cupons" },
+    { to: "/admin/relatorios", icon: BarChart2, label: "Relatórios de Vendas" },
+    { to: "/admin/storefront", icon: Paintbrush, label: "Personalizar Loja" },
+    { to: "/admin/restaurant", icon: Store, label: "Meu Restaurante" },
+    { to: "/admin/settings", icon: Settings, label: "Configurações Globais" },
+    { to: restaurantId ? `/menu/${restaurantId}` : "/", icon: Eye, label: "Ver Cardápio" },
+  ];
+
+  if (email === "Hg.lavila@gmail.com") {
+    items.splice(11, 0, { to: "/admin/master-diagnostics", icon: ShieldAlert, label: "Master Dados" });
+  }
+
+  return items;
+};
 
 export const AdminLayout = ({ children }: { children: ReactNode }) => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { signOut, restaurantId } = useAuth();
-  const navItems = getNavItems(restaurantId);
+  const { signOut, restaurantId, user } = useAuth();
+  const navItems = getNavItems(restaurantId, user?.email);
 
   const handleLogout = async () => {
     await signOut();
