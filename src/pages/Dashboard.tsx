@@ -237,27 +237,20 @@ const Dashboard = () => {
         </div>
 
         {/* KPI Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
           {kpiCards.map((kpi) => (
             <Card key={kpi.label}>
               <CardContent className="p-4 flex items-center gap-3">
                 <div className={`rounded-lg ${kpi.bgClass} p-2.5 shrink-0`}>
                   <kpi.icon className={`h-5 w-5 ${kpi.iconClass}`} />
                 </div>
-                <div className="min-w-0 flex-1">
-                  <p 
-                    className={`text-xl font-bold truncate ${kpi.valueClass}`}
-                    title={
-                      kpi.isMonetary 
-                        ? `R$ ${Number(kpi.value).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` 
-                        : String(kpi.value)
-                    }
-                  >
+                <div>
+                  <p className={`text-xl font-bold ${kpi.valueClass}`}>
                     {kpi.isMonetary
                       ? `R$ ${Number(kpi.value).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
                       : kpi.value}
                   </p>
-                  <p className="text-xs text-muted-foreground truncate" title={kpi.label}>{kpi.label}</p>
+                  <p className="text-xs text-muted-foreground">{kpi.label}</p>
                 </div>
               </CardContent>
             </Card>
