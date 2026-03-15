@@ -254,12 +254,17 @@ const LandingPage = () => {
                         <p>O desperdício é a porta de entrada. Mas o Cheffnex entrega controle total da sua operação.</p>
                     </div>
                     <div className="bento">
-                        <div className="bc" data-aos="fade-up" data-aos-delay="100">
-                            <div style={{ marginBottom: 24, color: "var(--pr)" }}><i data-lucide="menu-square" data-size="32" /></div>
-                            <h3>🍽️ Cardápio Inteligente que Vende</h3>
-                            <p>Seu cardápio deixa de ser vergonha e vira <strong>ferramenta de venda</strong>.</p>
-                            <ul><li>Criação e edição em minutos</li><li>Preços, descrições, imagens e variações</li><li>Link bonito para enviar ao cliente</li><li>Atualização instantânea (sem PDF, sem designer)</li></ul>
-                            <p style={{ marginTop: 16, color: "var(--pr)", fontWeight: 600, fontSize: ".9rem" }}>📌 Mudou o preço do insumo? Dois cliques e pronto.</p>
+                        <div className="bc" data-aos="fade-up" data-aos-delay="100" style={{ padding: 0, display: "flex", flexDirection: "column" }}>
+                            <div style={{ padding: "28px 28px 0 28px", flex: 1 }}>
+                                <div style={{ marginBottom: 24, color: "var(--pr)" }}><i data-lucide="menu-square" data-size="32" /></div>
+                                <h3>🍽️ Cardápio Inteligente que Vende</h3>
+                                <p>Seu cardápio deixa de ser vergonha e vira <strong>ferramenta de venda</strong>.</p>
+                                <ul><li>Criação e edição em minutos</li><li>Preços, descrições, imagens e variações</li><li>Link bonito para enviar ao cliente</li><li>Atualização instantânea (sem PDF, sem designer)</li></ul>
+                                <p style={{ marginTop: 16, color: "var(--pr)", fontWeight: 600, fontSize: ".9rem" }}>📌 Mudou o preço do insumo? Dois cliques e pronto.</p>
+                            </div>
+                            <div style={{ marginTop: 32, borderTop: "1px solid var(--bd)", backgroundColor: "#151312", paddingTop: 32, display: "flex", justifyContent: "center", overflow: "hidden" }}>
+                                <img src="/menu-mockup.png" alt="Preview do Cardápio" style={{ width: "85%", borderRadius: "12px 12px 0 0", boxShadow: "0 -12px 40px rgba(0,0,0,0.6)", border: "1px solid rgba(255,255,255,0.05)", borderBottom: "none", display: "block", objectFit: "cover", objectPosition: "top", maxHeight: "300px" }} />
+                            </div>
                         </div>
                         <div className="bc bc-vt" data-aos="fade-up" data-aos-delay="200">
                             <div>
@@ -274,15 +279,20 @@ const LandingPage = () => {
                                 </div>
                             </div>
                         </div>
-                        <div className="bc" data-aos="fade-up" data-aos-delay="300">
-                            <div style={{ marginBottom: 24, color: "var(--ok)" }}><i data-lucide="package" data-size="32" /></div>
-                            <h3>📦 Controle de Estoque sem Achismo</h3>
-                            <p>Aqui o estoque para de ser um <strong>cemitério de dinheiro</strong>.</p>
-                            <ul><li>Produtos conectados aos insumos</li><li>Visão clara do que entra e do que sai</li><li>Redução real de desperdício</li><li>Base sólida para controlar CMV</li></ul>
-                            <p style={{ marginTop: 16, color: "var(--ok)", fontWeight: 600, fontSize: ".9rem" }}>📌 Você sabe o que tem, o que falta e onde está vazando.</p>
+                        <div className="bc" data-aos="fade-up" data-aos-delay="300" style={{ padding: 0, display: "flex", flexDirection: "column" }}>
+                            <div style={{ padding: "28px 28px 0 28px", flex: 1 }}>
+                                <div style={{ marginBottom: 24, color: "var(--ok)" }}><i data-lucide="package" data-size="32" /></div>
+                                <h3>📦 Controle de Estoque sem Achismo</h3>
+                                <p>Aqui o estoque para de ser um <strong>cemitério de dinheiro</strong>.</p>
+                                <ul><li>Produtos conectados aos insumos</li><li>Visão clara do que entra e do que sai</li><li>Redução real de desperdício</li><li>Base sólida para controlar CMV</li></ul>
+                                <p style={{ marginTop: 16, color: "var(--ok)", fontWeight: 600, fontSize: ".9rem" }}>📌 Você sabe o que tem, o que falta e onde está vazando.</p>
+                            </div>
+                            <div style={{ marginTop: 32, borderTop: "1px solid var(--bd)", backgroundColor: "#151312", paddingTop: 32, display: "flex", justifyContent: "center", overflow: "hidden" }}>
+                                <img src="/estoque-mockup.png" alt="Preview do Controle de Estoque" style={{ width: "85%", borderRadius: "12px 12px 0 0", boxShadow: "0 -12px 40px rgba(0,0,0,0.6)", border: "1px solid rgba(255,255,255,0.05)", borderBottom: "none", display: "block", objectFit: "cover", objectPosition: "top", maxHeight: "300px" }} />
+                            </div>
                         </div>
-                        <div className="bc bc-lg" data-aos="fade-up" data-aos-delay="400">
-                            <div style={{ display: "flex", gap: 40, flexWrap: "wrap" }}>
+                        <div className="bc bc-lg" data-aos="fade-up" data-aos-delay="400" style={{ padding: 0, display: "flex", flexDirection: "column" }}>
+                            <div style={{ padding: "28px", display: "flex", gap: 40, flexWrap: "wrap", flex: 1 }}>
                                 <div style={{ flex: 1, minWidth: 250 }}>
                                     <div style={{ marginBottom: 16, color: "#DDAA00" }}><i data-lucide="bar-chart-2" data-size="24" /></div>
                                     <h3>📊 Gestão Simples para Decidir Melhor</h3>
@@ -299,6 +309,9 @@ const LandingPage = () => {
                                     <h3>Templates e Marca</h3>
                                     <p>Você entrega presença com identidades e templates personalizados.</p>
                                 </div>
+                            </div>
+                            <div style={{ marginTop: 16, borderTop: "1px solid var(--bd)", backgroundColor: "#151312", paddingTop: 32, display: "flex", justifyContent: "center", overflow: "hidden" }}>
+                                <img src="/financeiro-mockup.png" alt="Preview Financeiro" style={{ width: "85%", borderRadius: "12px 12px 0 0", boxShadow: "0 -12px 40px rgba(0,0,0,0.6)", border: "1px solid rgba(255,255,255,0.05)", borderBottom: "none", display: "block", objectFit: "cover", objectPosition: "top", maxHeight: "350px" }} />
                             </div>
                         </div>
                     </div>

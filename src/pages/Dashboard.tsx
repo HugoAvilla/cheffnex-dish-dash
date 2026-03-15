@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { addDays, isAfter, isBefore, differenceInDays } from "date-fns";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
 
 type Ingredient = {
   id: string;
@@ -132,6 +133,25 @@ const Dashboard = () => {
     });
   }, [ingredients]);
 
+  const stockByCategoryData = useMemo(() => {
+    const map: Record<string, number> = {};
+    for (const item of ingredients) {
+      const cat = item.category || "Outros";
+      if (!map[cat]) map[cat] = 0;
+      map[cat] += (Number(item.cost_price || 0) * Number(item.current_stock));
+    }
+    return Object.entries(map).map(([name, value]) => ({ name, value })).sort((a,b) => b.value - a.value);
+  }, [ingredients]);
+
+  const stockStatusData = useMemo(() => {
+    const normal = metrics.total - metrics.outOfStock - metrics.lowStock;
+    return [
+      { name: "Normal", value: normal, color: "hsl(var(--success))" },
+      { name: "Estoque Baixo", value: metrics.lowStock, color: "hsl(var(--warning))" },
+      { name: "Sem Estoque", value: metrics.outOfStock, color: "hsl(var(--destructive))" },
+    ].filter(d => d.value > 0);
+  }, [metrics]);
+
   const userName = profile?.full_name || "Admin";
 
   const kpiCards = [
@@ -221,20 +241,87 @@ const Dashboard = () => {
           {kpiCards.map((kpi) => (
             <Card key={kpi.label}>
               <CardContent className="p-4 flex items-center gap-3">
-                <div className={`rounded-lg ${kpi.bgClass} p-2.5`}>
+                <div className={`rounded-lg ${kpi.bgClass} p-2.5 shrink-0`}>
                   <kpi.icon className={`h-5 w-5 ${kpi.iconClass}`} />
                 </div>
-                <div>
-                  <p className={`text-xl font-bold ${kpi.valueClass}`}>
+                <div className="min-w-0 flex-1">
+                  <p 
+                    className={`text-xl font-bold truncate ${kpi.valueClass}`}
+                    title={
+                      kpi.isMonetary 
+                        ? `R$ ${Number(kpi.value).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` 
+                        : String(kpi.value)
+                    }
+                  >
                     {kpi.isMonetary
                       ? `R$ ${Number(kpi.value).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
                       : kpi.value}
                   </p>
-                  <p className="text-xs text-muted-foreground">{kpi.label}</p>
+                  <p className="text-xs text-muted-foreground truncate" title={kpi.label}>{kpi.label}</p>
                 </div>
               </CardContent>
             </Card>
           ))}
+        </div>
+
+        {/* Charts */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base font-semibold">Valor em Estoque por Categoria</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="h-[250px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={stockByCategoryData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                    <XAxis dataKey="name" fontSize={12} tickLine={false} axisLine={false} />
+                    <YAxis 
+                      fontSize={12} 
+                      tickLine={false} 
+                      axisLine={false}
+                      tickFormatter={(val) => `R$ ${val}`} 
+                    />
+                    <RechartsTooltip 
+                      formatter={(value: number) => [`R$ ${value.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`, "Valor"]}
+                      contentStyle={{ backgroundColor: 'hsl(var(--card))', borderColor: 'hsl(var(--border))', borderRadius: '8px' }}
+                    />
+                    <Bar dataKey="value" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base font-semibold">Status dos Itens</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="h-[250px] w-full flex items-center justify-center">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={stockStatusData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={60}
+                      outerRadius={80}
+                      paddingAngle={5}
+                      dataKey="value"
+                    >
+                      {stockStatusData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <RechartsTooltip 
+                      contentStyle={{ backgroundColor: 'hsl(var(--card))', borderColor: 'hsl(var(--border))', borderRadius: '8px' }}
+                    />
+                    <Legend verticalAlign="bottom" height={36} />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Detail Cards */}
