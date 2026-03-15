@@ -144,24 +144,7 @@ const LandingPage = () => {
                     </div>
 
                     <div className="dash-wrap" data-aos="zoom-in-up" data-aos-duration="1200" data-aos-delay="300">
-                        <div className="fc fc-1">
-                            <div className="fc-i red"><i data-lucide="alert-triangle" /></div>
-                            <div className="fc-t"><h4>Alerta de Desperdício</h4><p>Consumo acima da média</p></div>
-                        </div>
-                        <div className="fc fc-2">
-                            <div className="fc-i org"><i data-lucide="trending-down" /></div>
-                            <div className="fc-t"><h4>Margem Afetada</h4><p>Prejuízo Evitável: R$ 450</p></div>
-                        </div>
-                        <div className="fc fc-3">
-                            <div className="fc-t"><h4>Insumos</h4><p>Análise de Saída</p></div>
-                        </div>
-                        <div className="dash">
-                            <div className="mock-ov">
-                                <i data-lucide="bar-chart-3" data-size="48" style={{ color: "var(--pr)", marginBottom: 16 }} />
-                                <h3 style={{ color: "#fff" }}>Painel Visão Geral de Controle</h3>
-                                <p>Gráficos de Insumos • Impacto na Margem • Alertas</p>
-                            </div>
-                        </div>
+                        <img src="/dashboard-hero.png" alt="Dashboard Cheffnex" style={{ width: "100%", display: "block", borderRadius: "var(--r3)" }} />
                     </div>
                 </div>
             </section>
