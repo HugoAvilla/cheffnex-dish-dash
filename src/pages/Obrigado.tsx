@@ -233,10 +233,10 @@ export default function Obrigado() {
                         🎉 Pagamento Aprovado! Bem-vindo aos 1%.
                     </h1>
                     <p className="text-lg md:text-xl text-muted-foreground leading-relaxed">
-                        Você acaba de dar o passo definitivo para tirar seu restaurante do caos e assumir o controle real. O Cheffnex já está preparando o seu cérebro operacional nos bastidores.
+                        Bem-vindo ao Cheffnex. Nosso maior compromisso é construir o sistema de gestão perfeito para a sua realidade — e a plataforma evolui junto com o seu restaurante.
                     </p>
                     <p className="text-lg md:text-xl text-muted-foreground leading-relaxed">
-                        Mas lembre-se: não adianta ter uma Ferrari se você não conhece a pista. Para garantir que você faça parte dos 0.1% que dominam o mercado, eu preparei um <span className="font-bold text-foreground">Presente Exclusivo de Aceleração: 1 Mês de Cheffnex 100% Grátis</span>.
+                        Para garantirmos a melhor experiência possível desde o seu primeiro acesso, precisamos de um feedback que leva menos de 2 minutos para preencher.
                     </p>
                     <div className="bg-muted p-4 rounded-xl border border-border shadow-sm">
                         <p className="text-base font-medium">

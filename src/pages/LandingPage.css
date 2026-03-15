@@ -307,7 +307,7 @@
     color: var(--txm);
     font-family: 'Outfit';
     font-size: 1rem;
-    background-image: url('https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&q=80');
+    background-image: url('../assets/dashboard-mockup.png');
     background-size: cover;
     background-position: center
 }
