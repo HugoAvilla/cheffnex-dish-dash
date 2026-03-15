@@ -39,48 +39,24 @@ const Menu = () => {
 
   const effectiveRestaurantId = paramRid || fallbackRestaurant?.id || null;
 
-  // Fetch restaurant details (including new columns)
-  const { data: restaurant } = useQuery({
-    queryKey: ["restaurant-details", effectiveRestaurantId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("restaurants")
-        .select("*")
-        .eq("id", effectiveRestaurantId!)
-        .single();
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!effectiveRestaurantId,
-  });
+  const restaurant = { id: effectiveRestaurantId, primary_color: "#E11D48", logo_url: "https://images.unsplash.com/photo-1514933651103-005eec06c04b?w=150&h=150&fit=crop", banner_url: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=1200&h=300&fit=crop", is_open: true, open_time: "18:00", close_time: "23:59", name: "La Bella Pizza", description: "A autêntica pizza italiana", promo_banner_text: "Promoções Imperdíveis", phone: "11999999999" };
 
-  const primaryColor = (restaurant as any)?.primary_color || "#E11D48";
+  const primaryColor = restaurant.primary_color || "#E11D48";
 
-  const { data: products = [], isLoading } = useQuery({
-    queryKey: ["menu-products", effectiveRestaurantId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("products").select("*")
-        .eq("is_active", true).eq("restaurant_id", effectiveRestaurantId!)
-        .order("name");
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!effectiveRestaurantId,
-  });
+  const categories = [
+    { id: "c1", name: "Pizzas Tradicionais", display_order: 1 },
+    { id: "c2", name: "Pizzas Especiais", display_order: 2 },
+    { id: "c3", name: "Bebidas", display_order: 3 },
+  ];
 
-  const { data: categories = [] } = useQuery({
-    queryKey: ["menu-categories", effectiveRestaurantId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("categories").select("*")
-        .eq("restaurant_id", effectiveRestaurantId!)
-        .order("display_order").order("name");
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!effectiveRestaurantId,
-  });
+  const products = [
+    { id: "p1", name: "Pizza Margherita", sell_price: 65.90, description: "Mussarela, tomate pelati, manjericão", category_id: "c1", is_active: true, image_url: "https://images.unsplash.com/photo-1574071318508-1cdbab80d002?w=500&h=500&fit=crop", badge: "MAIS VENDIDO" },
+    { id: "p2", name: "Pizza Calabresa", sell_price: 59.90, description: "Calabresa artesanal, cebola roxa", category_id: "c1", is_active: true, image_url: "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=500&h=500&fit=crop" },
+    { id: "p3", name: "Burrata Especial", sell_price: 89.90, description: "Burrata fresca com pesto e azeite trufado", category_id: "c2", is_active: true, image_url: "https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=500&h=500&fit=crop", badge: "NOVIDADE", is_featured: true },
+    { id: "p4", name: "Coca-Cola 2L", sell_price: 14.00, description: "Gelada", category_id: "c3", is_active: true, image_url: "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=500&h=500&fit=crop" },
+    { id: "p5", name: "Suco Natural de Laranja", sell_price: 12.00, description: "500ml", category_id: "c3", is_active: true, image_url: "https://images.unsplash.com/photo-1613478223719-2ab802602423?w=500&h=500&fit=crop" }
+  ] as any[];
+  const isLoading = false;
 
   const grouped = useMemo(() => {
     const map = new Map<string, Product[]>();
