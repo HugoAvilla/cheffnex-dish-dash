@@ -7,37 +7,20 @@ import { useQuery } from "@tanstack/react-query";
 const AdminMenuPreview = () => {
   const { restaurantId } = useAuth();
 
-  const { data: categories = [] } = useQuery({
-    queryKey: ["categories", restaurantId],
-    queryFn: async () => {
-      if (!restaurantId) return [];
-      const { data, error } = await supabase
-        .from("categories")
-        .select("*")
-        .eq("restaurant_id", restaurantId)
-        .order("display_order")
-        .order("name");
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!restaurantId,
-  });
+  const categories = [
+    { id: "c1", name: "Pizzas Tradicionais", display_order: 1 },
+    { id: "c2", name: "Pizzas Especiais", display_order: 2 },
+    { id: "c3", name: "Bebidas", display_order: 3 },
+  ];
 
-  const { data: products = [], isLoading } = useQuery({
-    queryKey: ["admin-preview-products", restaurantId],
-    queryFn: async () => {
-      if (!restaurantId) return [];
-      const { data, error } = await supabase
-        .from("products")
-        .select("*")
-        .eq("restaurant_id", restaurantId)
-        .eq("is_active", true)
-        .order("name");
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!restaurantId,
-  });
+  const products = [
+    { id: "p1", name: "Pizza Margherita", sell_price: 65.90, description: "Mussarela, tomate pelati, manjericão", category_id: "c1", is_active: true, image_url: "https://images.unsplash.com/photo-1574071318508-1cdbab80d002?w=500&h=500&fit=crop", badge: "MAIS VENDIDO" },
+    { id: "p2", name: "Pizza Calabresa", sell_price: 59.90, description: "Calabresa artesanal, cebola roxa", category_id: "c1", is_active: true, image_url: "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=500&h=500&fit=crop" },
+    { id: "p3", name: "Burrata Especial", sell_price: 89.90, description: "Burrata fresca com pesto e azeite trufado", category_id: "c2", is_active: true, image_url: "https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=500&h=500&fit=crop", badge: "NOVIDADE", is_featured: true },
+    { id: "p4", name: "Coca-Cola 2L", sell_price: 14.00, description: "Gelada", category_id: "c3", is_active: true, image_url: "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=500&h=500&fit=crop" },
+    { id: "p5", name: "Suco Natural de Laranja", sell_price: 12.00, description: "500ml", category_id: "c3", is_active: true, image_url: "https://images.unsplash.com/photo-1613478223719-2ab802602423?w=500&h=500&fit=crop" }
+  ];
+  const isLoading = false;
 
   const grouped = useMemo(() => {
     const map = new Map<string, any[]>();

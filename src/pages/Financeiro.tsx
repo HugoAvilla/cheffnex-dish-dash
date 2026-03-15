@@ -90,59 +90,34 @@ const Financeiro = () => {
   const monthEnd = format(endOfMonth(new Date()), "yyyy-MM-dd");
 
   // ── Orders (revenue) ──────────────────────────────────────────────────────
-  const { data: orders = [], isLoading: ordersLoading } = useQuery({
-    queryKey: ["financeiro-orders", restaurantId, monthStart],
-    queryFn: async () => {
-      if (!restaurantId) return [];
-      const { data, error } = await supabase
-        .from("orders")
-        .select("id, total_amount, status, payment_method, order_type, created_at")
-        .eq("restaurant_id", restaurantId)
-        .neq("status", "CANCELLED")
-        .gte("created_at", `${monthStart}T00:00:00`)
-        .lte("created_at", `${monthEnd}T23:59:59`)
-        .order("created_at", { ascending: true });
-      if (error) throw error;
-      return (data || []) as Order[];
-    },
-    enabled: !!restaurantId,
-  });
+  const orders = Array.from({ length: 350 }, (_, i) => ({
+    id: `order-${i}`,
+    total_amount: Math.floor(Math.random() * 80) + 40,
+    status: "COMPLETED",
+    payment_method: ["PIX", "PIX", "CARD", "CASH"][Math.floor(Math.random() * 4)],
+    order_type: "DELIVERY",
+    created_at: new Date(new Date().setDate(new Date().getDate() - Math.floor(Math.random() * 30))).toISOString(),
+  }));
+  const ordersLoading = false;
 
   // ── Stock entries (cost) ───────────────────────────────────────────────────
-  const { data: stockEntries = [], isLoading: stockLoading } = useQuery({
-    queryKey: ["financeiro-stock", restaurantId, monthStart],
-    queryFn: async () => {
-      if (!restaurantId) return [];
-      const { data, error } = await supabase
-        .from("stock_entries")
-        .select("id, quantity, cost_price, created_at, ingredients(name, unit)")
-        .eq("restaurant_id", restaurantId)
-        .gte("created_at", `${monthStart}T00:00:00`)
-        .lte("created_at", `${monthEnd}T23:59:59`)
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      return (data || []) as unknown as StockEntry[];
-    },
-    enabled: !!restaurantId,
-  });
+  const stockEntries = Array.from({ length: 80 }, (_, i) => ({
+    id: `stock-${i}`,
+    quantity: Math.floor(Math.random() * 10) + 1,
+    cost_price: Math.floor(Math.random() * 50) + 10,
+    created_at: new Date(new Date().setDate(new Date().getDate() - Math.floor(Math.random() * 30))).toISOString(),
+    ingredients: { name: "Insumo Mock", unit: "KG" },
+  }));
+  const stockLoading = false;
 
   // ── Expenses (manual outflows) ────────────────────────────────────────────
-  const { data: expenses = [], isLoading: expensesLoading } = useQuery({
-    queryKey: ["financeiro-expenses", restaurantId, monthStart],
-    queryFn: async () => {
-      if (!restaurantId) return [];
-      const { data, error } = await supabase
-        .from("expenses")
-        .select("*")
-        .eq("restaurant_id", restaurantId)
-        .gte("expense_date", monthStart)
-        .lte("expense_date", monthEnd)
-        .order("expense_date", { ascending: false });
-      if (error) throw error;
-      return (data || []) as Expense[];
-    },
-    enabled: !!restaurantId,
-  });
+  const expenses = [
+    { id: "e1", description: "Energia Elétrica", amount: 1250.0, category: "Fixa", expense_date: monthStart, payment_method: "PIX", created_at: new Date().toISOString() },
+    { id: "e2", description: "Marketing Instagram", amount: 600.0, category: "Marketing", expense_date: monthStart, payment_method: "CARD", created_at: new Date().toISOString() },
+    { id: "e3", description: "Manutenção Forno", amount: 450.0, category: "Manutenção", expense_date: new Date().toISOString().split("T")[0], payment_method: "PIX", created_at: new Date().toISOString() },
+    { id: "e4", description: "Embalagens Personalizadas", amount: 890.0, category: "Insumos", expense_date: monthStart, payment_method: "PIX", created_at: new Date().toISOString() },
+  ];
+  const expensesLoading = false;
 
   // ── Delete expense mutation ───────────────────────────────────────────────
   const deleteExpenseMutation = useMutation({

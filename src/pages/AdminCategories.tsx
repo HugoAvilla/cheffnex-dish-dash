@@ -25,56 +25,22 @@ const AdminCategories = () => {
   const [csOrder, setCsOrder] = useState("0");
   const [csEditingId, setCsEditingId] = useState<string | null>(null);
 
-  const { data: categories = [], isLoading } = useQuery({
-    queryKey: ["categories", restaurantId],
-    queryFn: async () => {
-      if (!restaurantId) return [];
-      const { data, error } = await supabase
-        .from("categories")
-        .select("*")
-        .eq("restaurant_id", restaurantId)
-        .order("display_order")
-        .order("name");
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!restaurantId,
-  });
+  const categories = [
+    { id: "c1", name: "Pizzas Tradicionais", display_order: 1, description: "Nossas pizzas clássicas" },
+    { id: "c2", name: "Pizzas Especiais", display_order: 2, description: "Pizzas com ingredientes premium" },
+    { id: "c3", name: "Bebidas", display_order: 3, description: "Refrigerantes e sucos" },
+  ];
+  const isLoading = false;
 
-  const { data: productCounts = {} } = useQuery({
-    queryKey: ["category-product-counts", restaurantId],
-    queryFn: async () => {
-      if (!restaurantId) return {};
-      const { data, error } = await supabase
-        .from("products")
-        .select("category_id")
-        .eq("restaurant_id", restaurantId);
-      if (error) throw error;
-      const counts: Record<string, number> = {};
-      data.forEach((p: any) => {
-        if (p.category_id) {
-          counts[p.category_id] = (counts[p.category_id] || 0) + 1;
-        }
-      });
-      return counts;
-    },
-    enabled: !!restaurantId,
-  });
+  const productCounts: Record<string, number> = {
+    c1: 12,
+    c2: 8,
+    c3: 25,
+  };
 
-  const { data: crossSellRules = [] } = useQuery({
-    queryKey: ["cross-sell-rules-admin", restaurantId],
-    queryFn: async () => {
-      if (!restaurantId) return [];
-      const { data, error } = await supabase
-        .from("cross_sell_rules")
-        .select("*")
-        .eq("restaurant_id", restaurantId)
-        .order("display_order");
-      if (error) throw error;
-      return data || [];
-    },
-    enabled: !!restaurantId,
-  });
+  const crossSellRules = [
+    { id: "cs1", trigger_category_id: "c1", suggest_category_id: "c3", step_label: "Quer uma bebida gelada?", display_order: 1 }
+  ];
 
   const resetForm = () => {
     setEditingId(null);

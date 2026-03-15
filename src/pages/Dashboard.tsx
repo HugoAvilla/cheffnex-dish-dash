@@ -75,52 +75,19 @@ const Dashboard = () => {
   const alertDays = settings?.expiry_alert_days ?? 1;
   const thresholdPercent = settings?.low_stock_threshold ?? 10;
 
-  const { data: ingredients = [] } = useQuery({
-    queryKey: ["ingredients-dashboard", restaurantId],
-    queryFn: async () => {
-      if (!restaurantId) return [];
-      const { data, error } = await supabase
-        .from("ingredients")
-        .select("*")
-        .eq("restaurant_id", restaurantId)
-        .order("name");
-      if (error) throw error;
-      return (data as unknown as Ingredient[]) ?? [];
-    },
-    enabled: !!restaurantId,
-  });
+  const ingredients = [
+    { id: "1", name: "Farinha de Trigo Premium", unit: "KG", current_stock: 250, min_stock: 50, category: "Massa", unit_value: 4.5, expiration_date: "2026-12-31", cost_price: 4.5 },
+    { id: "2", name: "Queijo Mussarela ralado", unit: "KG", current_stock: 120, min_stock: 30, category: "Laticínios", unit_value: 35.9, expiration_date: "2026-05-10", cost_price: 35.9 },
+    { id: "3", name: "Tomate Pelati Italiano", unit: "Lata", current_stock: 400, min_stock: 80, category: "Hortifruti", unit_value: 12.0, expiration_date: "2027-01-15", cost_price: 12.0 },
+    { id: "4", name: "Calabresa Defumada", unit: "KG", current_stock: 80, min_stock: 20, category: "Frios", unit_value: 28.5, expiration_date: "2026-06-20", cost_price: 28.5 },
+    { id: "5", name: "Manjericão Fresco", unit: "Maço", current_stock: 0, min_stock: 5, category: "Hortifruti", unit_value: 3.5, expiration_date: "2026-03-20", cost_price: 3.5 },
+    { id: "6", name: "Azeite Trufado", unit: "L", current_stock: 2, min_stock: 5, category: "Óleos", unit_value: 150.0, expiration_date: "2026-11-01", cost_price: 150.0 },
+    { id: "7", name: "Cebola Roxa", unit: "KG", current_stock: 10, min_stock: 15, category: "Hortifruti", unit_value: 6.0, expiration_date: "2026-04-10", cost_price: 6.0 },
+  ];
 
-  const { data: activeProductsCount = 0 } = useQuery({
-    queryKey: ["products-count", restaurantId],
-    queryFn: async () => {
-      if (!restaurantId) return 0;
-      const { count, error } = await supabase
-        .from("products")
-        .select("*", { count: "exact", head: true })
-        .eq("restaurant_id", restaurantId)
-        .eq("is_active", true);
-      if (error) throw error;
-      return count || 0;
-    },
-    enabled: !!restaurantId,
-  });
+  const activeProductsCount = 45;
 
-  const { data: todayOrdersCount = 0 } = useQuery({
-    queryKey: ["orders-today", restaurantId],
-    queryFn: async () => {
-      if (!restaurantId) return 0;
-      const today = new Date().toISOString().split("T")[0];
-      const { count, error } = await supabase
-        .from("orders")
-        .select("*", { count: "exact", head: true })
-        .eq("restaurant_id", restaurantId)
-        .gte("created_at", today)
-        .in("status", ["NEW", "PREPARING"]);
-      if (error) throw error;
-      return count || 0;
-    },
-    enabled: !!restaurantId,
-  });
+  const todayOrdersCount = 127;
 
   const now = new Date();
   const alertDate = addDays(now, alertDays);

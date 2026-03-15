@@ -19,6 +19,7 @@ interface OrderWithItems {
   order_type: string;
   delivery_address: string | null;
   payment_method: string;
+  change_for?: number;
   created_at: string;
   order_items: {
     id: string;
@@ -47,20 +48,33 @@ const AdminOrders = () => {
   const prevOrderCount = useRef<number>(0);
   const audioContextRef = useRef<AudioContext | null>(null);
 
-  const { data: orders = [] } = useQuery({
-    queryKey: ["admin-orders", restaurantId],
-    queryFn: async () => {
-      if (!restaurantId) return [];
-      const { data, error } = await supabase
-        .from("orders")
-        .select("*, order_items(*, products(name))")
-        .eq("restaurant_id", restaurantId)
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      return (data || []) as unknown as OrderWithItems[];
+  const orders = [
+    {
+      id: "o1", customer_name: "João Silva", customer_phone: "11999999999", total_amount: 145.80, status: "NEW", order_type: "DELIVERY", delivery_address: "Rua das Flores, 123 - Centro", payment_method: "PIX", created_at: new Date().toISOString(),
+      order_items: [
+        { id: "i1", quantity: 2, unit_price: 65.90, notes: "Sem cebola por favor", extras_json: [{ name: "Borda Recheada Catupiry", qty: 1, price: 14.00 }], products: { name: "Pizza Margherita" } }
+      ]
     },
-    enabled: !!restaurantId,
-  });
+    {
+      id: "o2", customer_name: "Maria Santos", customer_phone: "11988888888", total_amount: 89.90, status: "PREPARING", order_type: "LOCAL", delivery_address: null, payment_method: "CARD", created_at: new Date(Date.now() - 15 * 60000).toISOString(),
+      order_items: [
+        { id: "i2", quantity: 1, unit_price: 89.90, notes: null, extras_json: [], products: { name: "Burrata Especial" } }
+      ]
+    },
+    {
+      id: "o3", customer_name: "Carlos Almeida", customer_phone: "11977777777", total_amount: 73.90, status: "DISPATCHED", order_type: "DELIVERY", delivery_address: "Av Paulista, 1000 - Apto 42", payment_method: "CASH", change_for: 100, created_at: new Date(Date.now() - 45 * 60000).toISOString(),
+      order_items: [
+        { id: "i3", quantity: 1, unit_price: 59.90, notes: "Bem assada", extras_json: [], products: { name: "Pizza Calabresa" } },
+        { id: "i4", quantity: 1, unit_price: 14.00, notes: null, extras_json: [], products: { name: "Coca-Cola 2L" } }
+      ]
+    },
+    {
+      id: "o4", customer_name: "Ana Costa", customer_phone: "11966666666", total_amount: 65.90, status: "COMPLETED", order_type: "PICKUP", delivery_address: null, payment_method: "PIX", created_at: new Date(Date.now() - 120 * 60000).toISOString(),
+      order_items: [
+        { id: "i5", quantity: 1, unit_price: 65.90, notes: null, extras_json: [], products: { name: "Pizza Margherita" } }
+      ]
+    }
+  ] as any[];
 
   const playNotificationSound = () => {
     if (!soundEnabled) return;

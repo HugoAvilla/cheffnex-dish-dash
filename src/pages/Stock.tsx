@@ -106,20 +106,17 @@ const Stock = () => {
   const alertDays = settings?.expiry_alert_days ?? 1;
   const thresholdPercent = settings?.low_stock_threshold ?? 10;
 
-  const { data: items = [], isLoading } = useQuery({
-    queryKey: ["ingredients", restaurantId],
-    queryFn: async () => {
-      if (!restaurantId) return [];
-      const { data, error } = await supabase
-        .from("ingredients")
-        .select("*")
-        .eq("restaurant_id", restaurantId)
-        .order("name");
-      if (error) throw error;
-      return (data as unknown as Ingredient[]) ?? [];
-    },
-    enabled: !!restaurantId,
-  });
+  const items = [
+    { id: "1", name: "Farinha de Trigo Premium", unit: "KG", current_stock: 250, min_stock: 50, cost_price: 4.5, expiration_date: "2026-12-31", restaurant_id: "fake", created_at: "2024-01-01", category: "Massa", last_stock_quantity: 250 },
+    { id: "2", name: "Queijo Mussarela ralado", unit: "KG", current_stock: 120, min_stock: 30, cost_price: 35.9, expiration_date: "2026-05-10", restaurant_id: "fake", created_at: "2024-01-01", category: "Laticínios", last_stock_quantity: 120 },
+    { id: "3", name: "Tomate Pelati Italiano", unit: "Lata", current_stock: 400, min_stock: 80, cost_price: 12.0, expiration_date: "2027-01-15", restaurant_id: "fake", created_at: "2024-01-01", category: "Hortifruti", last_stock_quantity: 400 },
+    { id: "4", name: "Calabresa Defumada", unit: "KG", current_stock: 80, min_stock: 20, cost_price: 28.5, expiration_date: "2026-06-20", restaurant_id: "fake", created_at: "2024-01-01", category: "Frios", last_stock_quantity: 80 },
+    { id: "5", name: "Manjericão Fresco", unit: "Maço", current_stock: 0, min_stock: 5, cost_price: 3.5, expiration_date: "2026-03-20", restaurant_id: "fake", created_at: "2024-01-01", category: "Hortifruti", last_stock_quantity: 5 },
+    { id: "6", name: "Azeite Trufado", unit: "L", current_stock: 2, min_stock: 5, cost_price: 150.0, expiration_date: "2026-11-01", restaurant_id: "fake", created_at: "2024-01-01", category: "Óleos", last_stock_quantity: 2 },
+    { id: "7", name: "Cebola Roxa", unit: "KG", current_stock: 10, min_stock: 15, cost_price: 6.0, expiration_date: "2026-04-10", restaurant_id: "fake", created_at: "2024-01-01", category: "Hortifruti", last_stock_quantity: 15 },
+    { id: "8", name: "Molho Pesto Especial", unit: "KG", current_stock: 4, min_stock: 10, cost_price: 45.0, expiration_date: "2026-03-25", restaurant_id: "fake", created_at: "2024-01-01", category: "Temperos", last_stock_quantity: 4 }
+  ] as Ingredient[];
+  const isLoading = false;
 
   // Metrics
   const metrics = useMemo(() => {
