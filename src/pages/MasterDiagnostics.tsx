@@ -10,6 +10,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Loader2, Download, ShieldAlert, Trash2, FileDown, Eye } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/components/ui/use-toast";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 
 const MASTER_DEV_EMAIL = "hg.lavila@gmail.com";
 
@@ -39,6 +41,40 @@ interface DiagnosticRow {
     bonus_resgatado: boolean;
     created_at: string;
 }
+
+const generateChartData = (data: DiagnosticRow[], field: keyof DiagnosticRow) => {
+    if (!data) return [];
+    const counts: Record<string, number> = {};
+    data.forEach(row => {
+        let val = row[field];
+        if (typeof val === 'boolean') val = val ? 'Sim' : 'Não';
+        if (!val || val === '') val = 'Não Informado';
+        const strVal = String(val);
+        counts[strVal] = (counts[strVal] || 0) + 1;
+    });
+
+    const total = data.length;
+    return Object.entries(counts)
+        .map(([name, quant]) => ({
+            name,
+            quantidade: quant,
+            percentual: total > 0 ? ((quant / total) * 100).toFixed(1) : "0.0"
+        }))
+        .sort((a, b) => a.quantidade - b.quantidade);
+};
+
+const CustomTooltip = ({ active, payload }: any) => {
+    if (active && payload && payload.length) {
+        return (
+            <div className="bg-card text-card-foreground p-3 border border-border shadow-md rounded-md z-50">
+                <p className="font-semibold text-sm mb-1">{payload[0].payload.name}</p>
+                <p className="text-sm text-primary">Qtd: {payload[0].value}</p>
+                <p className="text-sm text-muted-foreground">{payload[0].payload.percentual}% do total</p>
+            </div>
+        );
+    }
+    return null;
+};
 
 export default function MasterDiagnostics() {
     const { user, loading: authLoading } = useAuth();
@@ -176,9 +212,16 @@ export default function MasterDiagnostics() {
                 </Button>
             </div>
 
-            <Card className="shadow-sm border-border">
-                <CardContent className="p-0">
-                    <div className="rounded-md overflow-x-auto">
+            <Tabs defaultValue="tabela" className="w-full">
+                <TabsList className="mb-4">
+                    <TabsTrigger value="tabela">Tabela de Respostas</TabsTrigger>
+                    <TabsTrigger value="graficos">Gráficos Analíticos</TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="tabela" className="mt-0">
+                    <Card className="shadow-sm border-border">
+                        <CardContent className="p-0">
+                            <div className="rounded-md overflow-x-auto">
                         <Table>
                             <TableHeader className="bg-muted/50">
                                 <TableRow>
@@ -269,6 +312,55 @@ export default function MasterDiagnostics() {
                     </div>
                 </CardContent>
             </Card>
+            </TabsContent>
+
+            <TabsContent value="graficos" className="mt-0 space-y-6">
+                {diagnostics && diagnostics.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {[
+                            { k: "idade", label: "Idade" },
+                            { k: "genero", label: "Gênero" },
+                            { k: "cidade_estado_pais", label: "Localização" },
+                            { k: "renda_mensal", label: "Renda Mensal" },
+                            { k: "status_parental", label: "Status Parental" },
+                            { k: "estado_civil", label: "Estado Civil" },
+                            { k: "escolaridade", label: "Escolaridade" },
+                            { k: "status_proprietario", label: "Status do Imóvel" },
+                            { k: "emprego_atual", label: "Emprego Atual" },
+                            { k: "como_conheceu", label: "Como Conheceu" },
+                            { k: "tempo_conhece", label: "Tempo que Conhece" },
+                            { k: "comprou_similar", label: "Comprou Similar" },
+                            { k: "influencia_compra", label: "Influência de Compra" },
+                        ].map(({ k, label }) => {
+                            const cData = generateChartData(diagnostics, k as keyof DiagnosticRow);
+                            return (
+                                <Card key={k} className="shadow-sm border-border">
+                                    <CardHeader className="pb-2">
+                                        <CardTitle className="text-lg">{label}</CardTitle>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <div className="h-[250px] w-full mt-4">
+                                            <ResponsiveContainer width="100%" height="100%">
+                                                <BarChart data={cData} layout="vertical" margin={{ top: 5, right: 30, left: 10, bottom: 5 }}>
+                                                    <XAxis type="number" hide />
+                                                    <YAxis dataKey="name" type="category" width={100} tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
+                                                    <Tooltip content={<CustomTooltip />} cursor={{ fill: "hsl(var(--muted)/0.5)" }} />
+                                                    <Bar dataKey="quantidade" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} barSize={20} />
+                                                </BarChart>
+                                            </ResponsiveContainer>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            );
+                        })}
+                    </div>
+                ) : (
+                    <Card className="shadow-sm border-border p-8 text-center text-muted-foreground">
+                        Nenhum dado disponível para gerar gráficos.
+                    </Card>
+                )}
+            </TabsContent>
+        </Tabs>
 
             {/* View Details Modal */}
             <Dialog open={!!viewingRow} onOpenChange={(open) => !open && setViewingRow(null)}>

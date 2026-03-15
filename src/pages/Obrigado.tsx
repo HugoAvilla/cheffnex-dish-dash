@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
 
 interface WizardData {
+    nome: string;
     idade: string;
     genero: string;
     cidade_estado_pais: string;
@@ -34,7 +35,7 @@ interface WizardData {
 }
 
 const initialData: WizardData = {
-    idade: "", genero: "", cidade_estado_pais: "", renda_mensal: "",
+    nome: "", idade: "", genero: "", cidade_estado_pais: "", renda_mensal: "",
     status_parental: "", estado_civil: "", escolaridade: "", status_proprietario: "", emprego_atual: "",
     como_conheceu: "", tempo_conhece: "", comprou_similar: "", influencia_compra: "",
     sobre_voce: "", objetivos: "",
@@ -131,7 +132,7 @@ export default function Obrigado() {
         let requiredFields: (keyof WizardData)[] = [];
         switch (currentStep) {
             case 1:
-                requiredFields = ["idade", "genero", "cidade_estado_pais", "renda_mensal"];
+                requiredFields = ["nome", "idade", "genero", "cidade_estado_pais", "renda_mensal"];
                 break;
             case 2:
                 requiredFields = ["status_parental", "estado_civil", "escolaridade", "status_proprietario", "emprego_atual"];
@@ -259,6 +260,16 @@ export default function Obrigado() {
                     {step === 1 && (
                         <div className="space-y-8 animate-in slide-in-from-right-8 fade-in duration-500">
                             <h2 className="text-2xl font-bold border-b pb-2">Informações Demográficas</h2>
+
+                            <div className="space-y-4">
+                                <label className="text-base font-semibold block">Seu Nome Completo</label>
+                                <Input
+                                    placeholder="Digite seu nome completo"
+                                    value={data.nome}
+                                    onChange={(e) => updateData("nome", e.target.value)}
+                                    className="max-w-md bg-background"
+                                />
+                            </div>
 
                             <div className="space-y-4">
                                 <label className="text-base font-semibold block">Sua Idade</label>

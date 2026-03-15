@@ -1195,8 +1195,11 @@
     }
 
     .bc-vt {
-        grid-row: span 2;
         justify-content: space-between
+    }
+
+    .bc-lg {
+        grid-column: span 3
     }
 
     .bc {

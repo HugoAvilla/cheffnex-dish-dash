@@ -357,6 +357,7 @@ export type Database = {
           id: string
           idade: string | null
           influencia_compra: string | null
+          nome: string | null
           objetivos: string | null
           renda_mensal: string | null
           sobre_voce: string | null
@@ -381,6 +382,7 @@ export type Database = {
           id?: string
           idade?: string | null
           influencia_compra?: string | null
+          nome?: string | null
           objetivos?: string | null
           renda_mensal?: string | null
           sobre_voce?: string | null
@@ -405,6 +407,7 @@ export type Database = {
           id?: string
           idade?: string | null
           influencia_compra?: string | null
+          nome?: string | null
           objetivos?: string | null
           renda_mensal?: string | null
           sobre_voce?: string | null
@@ -414,7 +417,15 @@ export type Database = {
           tempo_conhece?: string | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "pesquisa_diagnostico_clientes_user_id_profile_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       plans: {
         Row: {
@@ -701,6 +712,35 @@ export type Database = {
       }
       get_daily_cmv: { Args: { _restaurant_id: string }; Returns: number }
       get_daily_revenue: { Args: { _restaurant_id: string }; Returns: number }
+      get_master_diagnostics: {
+        Args: never
+        Returns: {
+          bonus_resgatado: boolean
+          cidade_estado_pais: string
+          como_conheceu: string
+          comprou_similar: string
+          created_at: string
+          dificuldades_medos: string
+          email_pagamento: string
+          emprego_atual: string
+          escolaridade: string
+          estado_civil: string
+          ferramenta_desejada: string
+          genero: string
+          id: string
+          idade: string
+          influencia_compra: string
+          nome_pagamento: string
+          objetivos: string
+          renda_mensal: string
+          sobre_voce: string
+          sonhos: string
+          status_parental: string
+          status_proprietario: string
+          tempo_conhece: string
+          user_id: string
+        }[]
+      }
       get_user_id_by_email_or_document: {
         Args: { p_document: string; p_email: string }
         Returns: string
